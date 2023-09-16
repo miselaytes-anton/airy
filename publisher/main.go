@@ -29,14 +29,22 @@ import (
 // Connect to the broker and publish a message periodically
 
 const (
-	TOPIC         = "topic1"
-	QOS           = 1
-	SERVERADDRESS = "tcp://mosquitto:1883"
-	DELAY         = time.Second
-	CLIENTID      = "mqtt_publisher"
+	TOPIC                  = "measurement"
+	QOS                    = 1
+	DEFAULT_SERVER_ADDRESS = "tcp://mosquitto:1883"
+	DELAY                  = time.Second
+	CLIENTID               = "mqtt_publisher"
 
 	WRITETOLOG = true // If true then published messages will be written to the console
 )
+
+func getServerAdress() string {
+	value, ok := os.LookupEnv("SERVER_ADDRESS")
+	if ok {
+		return value
+	}
+	return DEFAULT_SERVER_ADDRESS
+}
 
 func main() {
 	// Enable logging by uncommenting the below
@@ -45,7 +53,7 @@ func main() {
 	// mqtt.WARN = log.New(os.Stdout, "[WARN]  ", 0)
 	// mqtt.DEBUG = log.New(os.Stdout, "[DEBUG] ", 0)
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker(SERVERADDRESS)
+	opts.AddBroker(getServerAdress())
 	opts.SetClientID(CLIENTID)
 
 	opts.SetOrderMatters(false)       // Allow out of order messages (use this option unless in order delivery is essential)
@@ -87,7 +95,10 @@ func main() {
 
 	// The message could be anything; lets make it JSON containing a simple count (makes it simpler to track the messages)
 	type msg struct {
-		Count uint64
+		Temperature uint64
+		Humidity    uint64
+		CO2         uint64
+		VOC         uint64
 	}
 
 	wg.Add(1)
@@ -96,8 +107,8 @@ func main() {
 		for {
 			select {
 			case <-time.After(DELAY):
-				count += 1
-				msg, err := json.Marshal(msg{Count: count})
+				count++
+				msg, err := json.Marshal(msg{Temperature: count, Humidity: count, CO2: count, VOC: count})
 				if err != nil {
 					panic(err)
 				}

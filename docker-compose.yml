@@ -5,10 +5,11 @@ services:
     networks:
       - test-net
     ports:
-      - target: 8883
-        published: 8883
+      - target: 1883
+        published: 1883
         protocol: tcp
         mode: host
+    
     volumes:
       - type: bind
         source: ./binds/mosquitto/config

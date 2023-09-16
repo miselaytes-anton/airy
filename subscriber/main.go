@@ -19,6 +19,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -28,16 +29,24 @@ import (
 )
 
 const (
-	TOPIC         = "topic1"
-	QOS           = 1
-	SERVERADDRESS = "tcp://mosquitto:1883"
-	CLIENTID      = "mqtt_subscriber"
+	TOPIC                  = "measurement"
+	QOS                    = 1
+	DEFAULT_SERVER_ADDRESS = "tcp://mosquitto:1883"
+	CLIENTID               = "mqtt_subscriber"
 
 	WRITETOLOG  = true  // If true then received messages will be written to the console
 	WRITETODISK = false // If true then received messages will be written to the file below
 
 	OUTPUTFILE = "/binds/receivedMessages.txt"
 )
+
+func getServerAdress() string {
+	value, ok := os.LookupEnv("SERVER_ADDRESS")
+	if ok {
+		return value
+	}
+	return DEFAULT_SERVER_ADDRESS
+}
 
 // handler is a simple struct that provides a function to be called when a message is received. The message is parsed
 // and the count followed by the raw message is written to the file (this makes it easier to sort the file)
@@ -67,9 +76,11 @@ func (o *handler) Close() {
 	}
 }
 
-// Message
 type Message struct {
-	Count uint64
+	Temperature uint64
+	Humidity    uint64
+	CO2         uint64
+	VOC         uint64
 }
 
 // handle is called when a message is received
@@ -81,10 +92,12 @@ func (o *handler) handle(_ mqtt.Client, msg mqtt.Message) {
 	}
 	if o.f != nil {
 		// Write out the number (make it long enough that sorting works) and the payload
-		if _, err := o.f.WriteString(fmt.Sprintf("%09d %s\n", m.Count, msg.Payload())); err != nil {
+		if _, err := o.f.WriteString(fmt.Sprintf("t=%09d %s\n", m.Temperature, msg.Payload())); err != nil {
 			fmt.Printf("ERROR writing to file: %s", err)
 		}
 	}
+
+	//write to SQL here.
 
 	if WRITETOLOG {
 		fmt.Printf("received message: %s\n", msg.Payload())
@@ -93,10 +106,10 @@ func (o *handler) handle(_ mqtt.Client, msg mqtt.Message) {
 
 func main() {
 	// Enable logging by uncommenting the below
-	// mqtt.ERROR = log.New(os.Stdout, "[ERROR] ", 0)
-	// mqtt.CRITICAL = log.New(os.Stdout, "[CRITICAL] ", 0)
-	// mqtt.WARN = log.New(os.Stdout, "[WARN]  ", 0)
-	// mqtt.DEBUG = log.New(os.Stdout, "[DEBUG] ", 0)
+	mqtt.ERROR = log.New(os.Stdout, "[ERROR] ", 0)
+	mqtt.CRITICAL = log.New(os.Stdout, "[CRITICAL] ", 0)
+	mqtt.WARN = log.New(os.Stdout, "[WARN]  ", 0)
+	mqtt.DEBUG = log.New(os.Stdout, "[DEBUG] ", 0)
 
 	// Create a handler that will deal with incoming messages
 	h := NewHandler()
@@ -104,7 +117,7 @@ func main() {
 
 	// Now we establish the connection to the mqtt broker
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker(SERVERADDRESS)
+	opts.AddBroker(getServerAdress())
 	opts.SetClientID(CLIENTID)
 
 	opts.SetOrderMatters(false)       // Allow out of order messages (use this option unless in order delivery is essential)
