@@ -1,5 +1,24 @@
 version: "3.8"
 services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: tatadata
+      POSTGRES_USER: tatadata
+      POSTGRES_DB: tatadata
+    volumes:
+      - type: bind
+        source: ./binds/postgresql/data
+        target: /var/lib/postgresql/data
+      - type: bind
+        source: ./binds/postgresql/docker-entrypoint-initdb.d
+        target: /docker-entrypoint-initdb.d
+    ports:
+      - target: 5432
+        published: 5432
+        protocol: tcp
+        mode: host
   mosquitto:
     image: eclipse-mosquitto
     networks:
@@ -9,7 +28,6 @@ services:
         published: 1883
         protocol: tcp
         mode: host
-    
     volumes:
       - type: bind
         source: ./binds/mosquitto/config

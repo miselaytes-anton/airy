@@ -17,6 +17,7 @@ package main
 // Connect to the broker, subscribe, and write messages received to a file
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -26,13 +27,15 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	_ "github.com/lib/pq"
 )
 
 const (
-	TOPIC                  = "measurement"
-	QOS                    = 1
-	DEFAULT_SERVER_ADDRESS = "tcp://mosquitto:1883"
-	CLIENTID               = "mqtt_subscriber"
+	TOPIC                    = "measurement"
+	QOS                      = 1
+	DEFAULT_SERVER_ADDRESS   = "tcp://mosquitto:1883"
+	DEFAULT_POSTGRES_ADDRESS = "postgresql://tatadata:tatadata@localhost:5432/tatadata?sslmode=disable"
+	CLIENTID                 = "mqtt_subscriber"
 
 	WRITETOLOG  = true  // If true then received messages will be written to the console
 	WRITETODISK = false // If true then received messages will be written to the file below
@@ -48,13 +51,22 @@ func getServerAdress() string {
 	return DEFAULT_SERVER_ADDRESS
 }
 
+func getPostgresAddress() string {
+	value, ok := os.LookupEnv("POSTGRES_ADDRESS")
+	if ok {
+		return value
+	}
+	return DEFAULT_POSTGRES_ADDRESS
+}
+
 // handler is a simple struct that provides a function to be called when a message is received. The message is parsed
 // and the count followed by the raw message is written to the file (this makes it easier to sort the file)
 type handler struct {
-	f *os.File
+	f  *os.File
+	db *sql.DB
 }
 
-func NewHandler() *handler {
+func NewHandler(db *sql.DB) *handler {
 	var f *os.File
 	if WRITETODISK {
 		var err error
@@ -63,7 +75,7 @@ func NewHandler() *handler {
 			panic(err)
 		}
 	}
-	return &handler{f: f}
+	return &handler{f: f, db: db}
 }
 
 // Close closes the file
@@ -99,12 +111,44 @@ func (o *handler) handle(_ mqtt.Client, msg mqtt.Message) {
 
 	//write to SQL here.
 
+	insertDynStmt := `insert into "measurements"("timestamp", "sensor_id", "temperature") values($1, $2, $3)`
+	_, err := o.db.Exec(insertDynStmt, time.Now(), "bedroom", m.Temperature)
+
+	CheckError(err)
+
 	if WRITETOLOG {
 		fmt.Printf("received message: %s\n", msg.Payload())
 	}
 }
 
+func connectToDb() *sql.DB {
+	// connection string
+	host, port, user, password, dbname := "localhost", 5432, "tatadata", "tatadata", "tatadata"
+	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	// open database
+	db, err := sql.Open("postgres", psqlconn)
+	CheckError(err)
+
+	// check db
+	err = db.Ping()
+	CheckError(err)
+
+	fmt.Println("Connected!")
+
+	return db
+}
+
+func CheckError(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
 func main() {
+	db := connectToDb()
+	// close database
+	defer db.Close()
 	// Enable logging by uncommenting the below
 	mqtt.ERROR = log.New(os.Stdout, "[ERROR] ", 0)
 	mqtt.CRITICAL = log.New(os.Stdout, "[CRITICAL] ", 0)
@@ -112,7 +156,7 @@ func main() {
 	mqtt.DEBUG = log.New(os.Stdout, "[DEBUG] ", 0)
 
 	// Create a handler that will deal with incoming messages
-	h := NewHandler()
+	h := NewHandler(db)
 	defer h.Close()
 
 	// Now we establish the connection to the mqtt broker
