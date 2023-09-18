@@ -31,19 +31,19 @@ import (
 const (
 	TOPIC                  = "measurement"
 	QOS                    = 1
-	DEFAULT_SERVER_ADDRESS = "tcp://mosquitto:1883"
+	DEFAULT_BROKER_ADDRESS = "tcp://mosquitto:1883"
 	DELAY                  = time.Second
 	CLIENTID               = "mqtt_publisher"
 
 	WRITETOLOG = true // If true then published messages will be written to the console
 )
 
-func getServerAdress() string {
-	value, ok := os.LookupEnv("SERVER_ADDRESS")
+func getBrokerAdress() string {
+	value, ok := os.LookupEnv("BROKER_ADDRESS")
 	if ok {
 		return value
 	}
-	return DEFAULT_SERVER_ADDRESS
+	return DEFAULT_BROKER_ADDRESS
 }
 
 func main() {
@@ -53,7 +53,7 @@ func main() {
 	// mqtt.WARN = log.New(os.Stdout, "[WARN]  ", 0)
 	// mqtt.DEBUG = log.New(os.Stdout, "[DEBUG] ", 0)
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker(getServerAdress())
+	opts.AddBroker(getBrokerAdress())
 	opts.SetClientID(CLIENTID)
 
 	opts.SetOrderMatters(false)       // Allow out of order messages (use this option unless in order delivery is essential)
@@ -99,6 +99,7 @@ func main() {
 		Humidity    uint64
 		CO2         uint64
 		VOC         uint64
+		SensorID    string
 	}
 
 	wg.Add(1)
@@ -108,7 +109,7 @@ func main() {
 			select {
 			case <-time.After(DELAY):
 				count++
-				msg, err := json.Marshal(msg{Temperature: count, Humidity: count, CO2: count, VOC: count})
+				msg, err := json.Marshal(msg{Temperature: count, Humidity: count, CO2: count, VOC: count, SensorID: "living-room"})
 				if err != nil {
 					panic(err)
 				}

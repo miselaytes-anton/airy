@@ -9,10 +9,10 @@ services:
       POSTGRES_DB: tatadata
     volumes:
       - type: bind
-        source: ./binds/postgresql/data
+        source: ./__binds/postgresql/data
         target: /var/lib/postgresql/data
       - type: bind
-        source: ./binds/postgresql/docker-entrypoint-initdb.d
+        source: ./__binds/postgresql/docker-entrypoint-initdb.d
         target: /docker-entrypoint-initdb.d
     ports:
       - target: 5432
@@ -22,7 +22,7 @@ services:
   mosquitto:
     image: eclipse-mosquitto
     networks:
-      - test-net
+      - tatadata-net
     ports:
       - target: 1883
         published: 1883
@@ -30,32 +30,28 @@ services:
         mode: host
     volumes:
       - type: bind
-        source: ./binds/mosquitto/config
+        source: ./__binds/mosquitto/config
         target: /mosquitto/config
         read_only: true
       - type: bind
-        source: ./binds/mosquitto/data
+        source: ./__binds/mosquitto/data
         target: /mosquitto/data
       - type: bind
-        source: ./binds/mosquitto/log
+        source: ./__binds/mosquitto/log
         target: /mosquitto/log
-  pub:
-    build: publisher/.
+  test-publisher:
+    build: test-publisher/.
     networks:
-      - test-net
+      - tatadata-net
     depends_on:
       - mosquitto
-  sub:
-    build: subscriber/.
+  server:
+    build: server/.
     networks:
-      - test-net
+      - tatadata-net
     depends_on:
       - mosquitto
-    volumes:
-      - type: bind
-        source: ./binds/sub
-        target: /binds
-        read_only: false
+      - db
 networks:
-  test-net:
+  tatadata-net:
     external: false

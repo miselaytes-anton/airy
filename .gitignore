@@ -35,4 +35,4 @@ samples/stdinpub
 samples/stdoutsub
 samples/routing
 
-binds/postgresql/data/*
+__binds/postgresql/data/*
