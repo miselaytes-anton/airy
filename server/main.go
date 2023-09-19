@@ -14,7 +14,6 @@ import (
 
 	messageprocessor "server/messageProcessor"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	_ "github.com/lib/pq"
 )
 
@@ -47,18 +46,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// close database
-	defer db.Close()
-
-	// Enable mqtt logging.
-	mqtt.ERROR = log.New(os.Stdout, "[ERROR] ", 0)
-	mqtt.CRITICAL = log.New(os.Stdout, "[CRITICAL] ", 0)
-	mqtt.WARN = log.New(os.Stdout, "[WARN]  ", 0)
-	mqtt.DEBUG = log.New(os.Stdout, "[DEBUG] ", 0)
-
-	handlers := messageprocessor.Handlers{Db: db}
-	mqttClient := messageprocessor.MakeMqttClient(getBrokerAdress(), handlers)
-	messageprocessor.StartProcessing(mqttClient)
+	p := messageprocessor.NewMessageProcessor(getBrokerAdress(), db)
+	p.EnableMqttLogging()
+	p.StartProcessing()
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
@@ -66,6 +56,7 @@ func main() {
 
 	<-sig
 	fmt.Println("signal caught - exiting")
-	mqttClient.Disconnect(1000)
+	db.Close()
+	p.StopProcessing()
 	fmt.Println("shutdown complete")
 }

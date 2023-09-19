@@ -25,7 +25,7 @@ type MeasurementMessage struct {
 }
 
 // handle is called when a message is received
-func (o *Handlers) onMeasurementMessageHandler(_ mqtt.Client, msg mqtt.Message) {
+func (h Handlers) onMeasurementMessageHandler(_ mqtt.Client, msg mqtt.Message) {
 	// We extract the count and write that out first to simplify checking for missing values
 	var m MeasurementMessage
 	if err := json.Unmarshal(msg.Payload(), &m); err != nil {
@@ -41,7 +41,7 @@ func (o *Handlers) onMeasurementMessageHandler(_ mqtt.Client, msg mqtt.Message) 
 		VOC:         m.VOC,
 	}
 
-	database.InsertMeasurement(o.Db, measurement)
+	database.InsertMeasurement(h.Db, measurement)
 
 	fmt.Printf("Received message: %s\n", msg.Payload())
 }
@@ -49,24 +49,24 @@ func (o *Handlers) onMeasurementMessageHandler(_ mqtt.Client, msg mqtt.Message) 
 // If using QOS2 and CleanSession = FALSE then it is possible that we will receive messages on topics that we
 // have not subscribed to here (if they were previously subscribed to they are part of the session and survive
 // disconnect/reconnect). Adding a DefaultPublishHandler lets us detect this.
-func (o *Handlers) defaultPublishHandler(_ mqtt.Client, msg mqtt.Message) {
+func (h Handlers) defaultPublishHandler(_ mqtt.Client, msg mqtt.Message) {
 	fmt.Printf("Unexpected message: %s\n", msg)
 }
 
-func (o *Handlers) onConnectionLost(_ mqtt.Client, err error) {
+func (h Handlers) onConnectionLost(_ mqtt.Client, err error) {
 	fmt.Printf("Connection lost: %s\n", err)
 }
 
-func (o *Handlers) onReconnecting(_ mqtt.Client, _ *mqtt.ClientOptions) {
+func (h Handlers) onReconnecting(_ mqtt.Client, _ *mqtt.ClientOptions) {
 	fmt.Println("Attempting to reconnect")
 }
 
-func (o *Handlers) onConnect(c mqtt.Client) {
+func (h Handlers) onConnect(c mqtt.Client) {
 	fmt.Println("Connection established")
 
 	// Establish the subscription - doing this here means that it will happen every time a connection is established
 	// (useful if opts.CleanSession is TRUE or the broker does not reliably store session data)
-	t := c.Subscribe(topic, qos, o.onMeasurementMessageHandler)
+	t := c.Subscribe(topic, qos, h.onMeasurementMessageHandler)
 	// the connection handler is called in a goroutine so blocking here would hot cause an issue. However as blocking
 	// in other handlers does cause problems its best to just assume we should not block
 	go func() {
