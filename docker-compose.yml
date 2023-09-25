@@ -1,7 +1,9 @@
 version: "3.8"
 services:
-  db:
+  postgres:
     image: postgres
+    networks:
+      - tatadata-net
     restart: always
     environment:
       POSTGRES_PASSWORD: tatadata
@@ -20,6 +22,7 @@ services:
         protocol: tcp
         mode: host
   mosquitto:
+    restart: always
     image: eclipse-mosquitto
     networks:
       - tatadata-net
@@ -46,12 +49,13 @@ services:
     depends_on:
       - mosquitto
   server:
+    restart: always
     build: server/.
     networks:
       - tatadata-net
     depends_on:
       - mosquitto
-      - db
+      - postgres
 networks:
   tatadata-net:
     external: false

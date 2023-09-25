@@ -19,7 +19,7 @@ import (
 
 const (
 	defaultBrokerAddress    = "tcp://mosquitto:1883"
-	defaultPostgressAddress = "postgresql://tatadata:tatadata@localhost:5432/tatadata?sslmode=disable"
+	defaultPostgressAddress = "postgres://tatadata:tatadata@postgres:5432/tatadata?sslmode=disable"
 )
 
 func getBrokerAdress() string {
@@ -30,8 +30,6 @@ func getBrokerAdress() string {
 	return defaultBrokerAddress
 }
 
-// host, port, user, password, dbname := "localhost", 5432, "tatadata", "tatadata", "tatadata"
-// psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 func getPostgresAddress() string {
 	value, ok := os.LookupEnv("POSTGRES_ADDRESS")
 	if ok {
@@ -42,6 +40,12 @@ func getPostgresAddress() string {
 
 func main() {
 	db, err := sql.Open("postgres", getPostgresAddress())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = db.Ping()
+
 	if err != nil {
 		log.Fatal(err)
 	}

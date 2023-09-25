@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := build
 
-clean:
-	rm -rf ./binds/postgresql/data/*
+clean-db:
+	rm -rf ./__binds/postgresql/data/*
 .PHONY:fmt
 
 fmt:

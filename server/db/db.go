@@ -9,16 +9,18 @@ import (
 type Measurement struct {
 	Timestamp   time.Time
 	SensorID    string
-	Temperature uint64
-	Humidity    uint64
-	CO2         uint64
-	VOC         uint64
+	IAQ         float64
+	CO2         float64
+	VOC         float64
+	Pressure    float64
+	Temperature float64
+	Humidity    float64
 }
 
 // InsertMeasurement inserts a new measurement into the database.
 func InsertMeasurement(db *sql.DB, measurement Measurement) (bool, error) {
-	query := `insert into "measurements"("timestamp", "sensor_id", "temperature", "humidity", "co2", "voc") values($1, $2, $3, $4, $5, $6)`
-	_, err := db.Exec(query, "now()", measurement.SensorID, measurement.Temperature, measurement.Humidity, measurement.CO2, measurement.VOC)
+	query := `insert into "measurements"("timestamp", "sensor_id", "iaq",  "co2", "voc", "pressure", "temperature", "humidity") values($1, $2, $3, $4, $5, $6, $7, $8)`
+	_, err := db.Exec(query, "now()", measurement.SensorID, measurement.IAQ, measurement.CO2, measurement.VOC, measurement.Pressure, measurement.Temperature, measurement.Humidity)
 
 	if err != nil {
 		return false, err

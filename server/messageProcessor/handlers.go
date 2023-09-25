@@ -2,7 +2,6 @@ package messageprocessor
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	database "server/db"
 	"time"
@@ -17,33 +16,50 @@ type Handlers struct {
 
 // MeasurementMessage represents a single measurement sent by a sensor.
 type MeasurementMessage struct {
-	Temperature uint64
-	Humidity    uint64
-	CO2         uint64
-	VOC         uint64
 	SensorID    string
+	IAQ         float64
+	CO2         float64
+	VOC         float64
+	Pressure    float64
+	Temperature float64
+	Humidity    float64
+}
+
+// parseMeasurementMessage parses a measurement message which comes in the form of "bedroom 51.86 607.44 0.52 100853 27.25 60.22"
+func parseMeasurementMessage(msg mqtt.Message) (MeasurementMessage, error) {
+	var m MeasurementMessage
+	if _, err := fmt.Sscanf(string(msg.Payload()), "%s %g %g %g %g %g %g", &m.SensorID, &m.IAQ, &m.CO2, &m.VOC, &m.Pressure, &m.Temperature, &m.Humidity); err != nil {
+		return m, err
+	}
+
+	return m, nil
 }
 
 // handle is called when a message is received
 func (h Handlers) onMeasurementMessageHandler(_ mqtt.Client, msg mqtt.Message) {
-	// We extract the count and write that out first to simplify checking for missing values
-	var m MeasurementMessage
-	if err := json.Unmarshal(msg.Payload(), &m); err != nil {
+	fmt.Printf("Received message: %s\n", msg.Payload())
+	m, err := parseMeasurementMessage(msg)
+	if err != nil {
 		fmt.Printf("Message could not be parsed (%s): %s", msg.Payload(), err)
 	}
+	fmt.Printf("Parsed message: %+v\n", m)
 
 	measurement := database.Measurement{
 		Timestamp:   time.Now(),
 		SensorID:    m.SensorID,
-		Temperature: m.Temperature,
-		Humidity:    m.Humidity,
+		IAQ:         m.IAQ,
 		CO2:         m.CO2,
 		VOC:         m.VOC,
+		Pressure:    m.Pressure,
+		Temperature: m.Temperature,
+		Humidity:    m.Humidity,
 	}
 
-	database.InsertMeasurement(h.Db, measurement)
+	_, err = database.InsertMeasurement(h.Db, measurement)
+	if err != nil {
+		fmt.Printf("Measurement could not be inserted into database: %s", err)
+	}
 
-	fmt.Printf("Received message: %s\n", msg.Payload())
 }
 
 // If using QOS2 and CleanSession = FALSE then it is possible that we will receive messages on topics that we
