@@ -31,10 +31,16 @@ func InsertMeasurement(db *sql.DB, measurement Measurement) (bool, error) {
 // GetMeasurements returns measurements aggregated by resolution (ms) between fromEpoch and toEpoch.
 func GetMeasurements(db *sql.DB, resolution int64, fromEpoch int64, toEpoch int64, sensorID string) ([]Measurement, error) {
 	query := `
-	select (floor("timestamp"/$1)*$1)::numeric::integer as timestamp, sensor_id, avg(iaq) as iaq
+	select (floor("timestamp"/$1)*$1)::numeric::integer as timestamp, sensor_id, 
+	avg(iaq) as iaq, 
+	avg(humidity) as humidity,
+	avg(temperature) as temperature,
+	avg(pressure) as pressure, avg(co2) as co2, 
+	avg(voc) as voc
 	from "measurements"
 	where sensor_id=$4 and "timestamp" >= $2 and "timestamp" <= $3
 	group by (floor(timestamp/$1)*$1)::numeric::integer, sensor_id
+	order by timestamp asc
 	`
 
 	rows, err := db.Query(query, resolution, fromEpoch, toEpoch, sensorID)
@@ -49,7 +55,7 @@ func GetMeasurements(db *sql.DB, resolution int64, fromEpoch int64, toEpoch int6
 
 	for rows.Next() {
 		var measurement Measurement
-		err := rows.Scan(&measurement.Timestamp, &measurement.SensorID, &measurement.IAQ)
+		err := rows.Scan(&measurement.Timestamp, &measurement.SensorID, &measurement.IAQ, &measurement.Humidity, &measurement.Temperature, &measurement.Pressure, &measurement.CO2, &measurement.VOC)
 		if err != nil {
 			return nil, err
 		}
