@@ -1,6 +1,6 @@
 CREATE TABLE measurements (
     sensor_id VARCHAR (255) NOT NULL,
-    timestamp TIMESTAMP NOT NULL,
+    timestamp INT NOT NULL,
     iaq DOUBLE PRECISION,
     co2 DOUBLE PRECISION,
     voc DOUBLE PRECISION,

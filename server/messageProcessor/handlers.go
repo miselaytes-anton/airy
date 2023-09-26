@@ -45,7 +45,7 @@ func (h Handlers) onMeasurementMessageHandler(_ mqtt.Client, msg mqtt.Message) {
 	fmt.Printf("Parsed message: %+v\n", m)
 
 	measurement := database.Measurement{
-		Timestamp:   time.Now(),
+		Timestamp:   time.Now().Unix(),
 		SensorID:    m.SensorID,
 		IAQ:         m.IAQ,
 		CO2:         m.CO2,

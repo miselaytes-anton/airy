@@ -15,7 +15,7 @@ int        port     = 1883;
 const char topic[]  = "measurement";
 
 //set interval for sending messages (milliseconds)
-const long mqttInterval = 1000;
+const long mqttInterval = 60000;
 unsigned long previousMillis = 0;
 String mqttMessage;
 

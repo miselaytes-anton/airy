@@ -12,6 +12,7 @@ import (
 	// postgres driver
 	_ "github.com/lib/pq"
 
+	api "server/api"
 	messageprocessor "server/messageProcessor"
 
 	_ "github.com/lib/pq"
@@ -53,6 +54,7 @@ func main() {
 	p := messageprocessor.NewMessageProcessor(getBrokerAdress(), db)
 	p.EnableMqttLogging()
 	p.StartProcessing()
+	api.StartServer(db)
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
