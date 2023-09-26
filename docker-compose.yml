@@ -50,6 +50,11 @@ services:
       - mosquitto
   server:
     restart: always
+    ports:
+    - target: 8081
+      published: 8081
+      protocol: http
+      mode: host
     build: server/.
     networks:
       - tatadata-net
