@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"database/sql"
+	_ "time/tzdata"
 
 	// postgres driver
 	_ "github.com/lib/pq"
