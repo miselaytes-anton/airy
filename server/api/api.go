@@ -125,11 +125,6 @@ func graphsHandler(db *sql.DB) http.HandlerFunc {
 		}
 
 		iaqLineItems := generateLineItemsFromMeasurements(measurements, func(m database.Measurement) float64 { return m.IAQ })
-		// print line items
-		for _, item := range iaqLineItems {
-			fmt.Printf("%+v\n", item)
-		}
-
 		iaqChart := makeChart(params.SensorID, iaqLineItems, "IAQ", params.StartEpoch, params.EndEpoch)
 		iaqChart.Render(w)
 

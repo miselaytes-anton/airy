@@ -6,11 +6,11 @@
 char ssid[] = SECRET_SSID;        // your network SSID (name)
 char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
 char sensor_id[] = SENSOR_ID;
+char broker[] = MQTT_HOST;
 
 WiFiClient wifiClient;
 MqttClient mqttClient(wifiClient);
 
-const char broker[] = "192.168.178.14";
 int        port     = 1883;
 const char topic[]  = "measurement";
 
@@ -87,7 +87,7 @@ void setup(void)
 {
   /* Initializes the Serial communication */
   Serial.begin(115200);
-  while (!Serial) delay(10); // wait for console
+  // while (!Serial) delay(10); // wait for console
   delay(5000);
 
   conectToWiFi();
