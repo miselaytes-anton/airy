@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	database "server/db"
+	"strconv"
 	"time"
 
 	"github.com/go-echarts/go-echarts/v2/charts"
@@ -54,31 +55,90 @@ func makeChart(sensorID string, lineItems []opts.LineData, title string, startEp
 	return line
 }
 
-func graphsHandler(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, _ *http.Request) {
+func getStartOfDay(t time.Time, location *time.Location) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, location)
+}
 
-		//todo: get start and end epoch from query params
-		startEpoch := time.Now().Unix()/86400*86400 - 3600*2
-		endEpoch := startEpoch + 86400
-		fmt.Println(startEpoch, endEpoch, time.Now().Unix())
-		var resolution int64 = 3600
-		sensorID := "livingroom"
-		measurements, err := database.GetMeasurements(db, resolution, startEpoch, endEpoch, sensorID)
+func getEndOfDay(t time.Time, location *time.Location) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 0, location)
+}
+
+func parseParams(r *http.Request) (database.MeasurementsQuery, error) {
+	amsterdam, err := time.LoadLocation("Europe/Amsterdam")
+	if err != nil {
+		return database.MeasurementsQuery{}, err
+	}
+	dateStr := r.URL.Query().Get("date")
+
+	var date time.Time
+	if dateStr != "" {
+		date, err = time.Parse("2006-01-02", dateStr)
+		if err != nil {
+			return database.MeasurementsQuery{}, err
+		}
+	} else {
+		date = time.Now().In(amsterdam)
+	}
+
+	startEpoch := getStartOfDay(date, amsterdam).Unix()
+	endEpoch := getEndOfDay(date, amsterdam).Unix()
+
+	resolutionStr := r.URL.Query().Get("resolution")
+	var resolution int64
+	if resolutionStr == "" {
+		resolution = 3600
+	} else {
+		resolution, err = strconv.ParseInt(resolutionStr, 10, 64)
+		if err != nil {
+			return database.MeasurementsQuery{}, err
+		}
+	}
+
+	sensorID := r.URL.Query().Get("sensor_id")
+	if sensorID == "" {
+		sensorID = "livingroom"
+	}
+
+	return database.MeasurementsQuery{
+		StartEpoch: startEpoch,
+		EndEpoch:   endEpoch,
+		Resolution: resolution,
+		SensorID:   sensorID,
+	}, nil
+
+}
+
+func graphsHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params, err := parseParams(r)
+		if err != nil {
+			fmt.Fprintf(w, "Error parsing params: %s", err)
+			return
+		}
+
+		fmt.Printf("Getting measurements for: %+v\n", params)
+
+		measurements, err := database.GetMeasurements(db, params)
 		if err != nil {
 			fmt.Fprintf(w, "Error getting measurements: %s", err)
 			return
 		}
 
 		iaqLineItems := generateLineItemsFromMeasurements(measurements, func(m database.Measurement) float64 { return m.IAQ })
-		iaqChart := makeChart(sensorID, iaqLineItems, "IAQ", startEpoch, endEpoch)
+		// print line items
+		for _, item := range iaqLineItems {
+			fmt.Printf("%+v\n", item)
+		}
+
+		iaqChart := makeChart(params.SensorID, iaqLineItems, "IAQ", params.StartEpoch, params.EndEpoch)
 		iaqChart.Render(w)
 
 		humidityLineItems := generateLineItemsFromMeasurements(measurements, func(m database.Measurement) float64 { return m.Humidity })
-		humidityChart := makeChart(sensorID, humidityLineItems, "Humidity", startEpoch, endEpoch)
+		humidityChart := makeChart(params.SensorID, humidityLineItems, "Humidity", params.StartEpoch, params.EndEpoch)
 		humidityChart.Render(w)
 
 		temperatureLineItems := generateLineItemsFromMeasurements(measurements, func(m database.Measurement) float64 { return m.Temperature })
-		temperatureChart := makeChart(sensorID, temperatureLineItems, "Temperature", startEpoch, endEpoch)
+		temperatureChart := makeChart(params.SensorID, temperatureLineItems, "Temperature", params.StartEpoch, params.EndEpoch)
 		temperatureChart.Render(w)
 	}
 }
