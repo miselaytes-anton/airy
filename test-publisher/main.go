@@ -15,7 +15,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
@@ -109,20 +108,13 @@ func main() {
 			select {
 			case <-time.After(DELAY):
 				count++
-				msg, err := json.Marshal(msg{Temperature: count, Humidity: count, CO2: count, VOC: count, SensorID: "living-room"})
-				if err != nil {
-					panic(err)
-				}
 
-				if WRITETOLOG {
-					fmt.Printf("sending message: %s\n", msg)
-				}
-				t := client.Publish(TOPIC, QOS, false, msg)
+				t := client.Publish(TOPIC, QOS, false, "livingroom 51.86 607.44 0.52 100853 27.25 60.22")
 				// Handle the token in a go routine so this loop keeps sending messages regardless of delivery status
 				go func() {
 					_ = t.Wait() // Can also use '<-t.Done()' in releases > 1.2.0
 					if t.Error() != nil {
-						fmt.Printf("ERROR PUBLISHING: %s\n", err)
+						fmt.Printf("ERROR PUBLISHING: %s\n", t.Error())
 					}
 				}()
 			case <-done:
