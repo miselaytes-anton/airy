@@ -8,12 +8,6 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-const (
-	topic    = "measurement"
-	qos      = 1
-	clientID = "tatadata"
-)
-
 // MessageProcessor subscribes to messages in the mqtt broker and stores them in the database.
 type MessageProcessor struct {
 	Client mqtt.Client
