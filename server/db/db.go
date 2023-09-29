@@ -18,8 +18,9 @@ type Measurement struct {
 
 // MeasurementsQuery represents a query for measurements.
 type MeasurementsQuery struct {
-	StartEpoch, EndEpoch, Resolution int64
-	SensorID                         string
+	StartEpoch, EndEpoch int64
+	Resolution           int
+	SensorID             string
 }
 
 // InsertMeasurement inserts a new measurement into the database.

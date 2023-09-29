@@ -84,14 +84,15 @@ func parseParams(r *http.Request) (database.MeasurementsQuery, error) {
 	endEpoch := getEndOfDay(date, amsterdam).Unix()
 
 	resolutionStr := r.URL.Query().Get("resolution")
-	var resolution int64
+	var resolution int
 	if resolutionStr == "" {
 		resolution = 3600
 	} else {
-		resolution, err = strconv.ParseInt(resolutionStr, 10, 64)
+		res, err := strconv.ParseInt(resolutionStr, 10, 32)
 		if err != nil {
 			return database.MeasurementsQuery{}, err
 		}
+		resolution = int(res)
 	}
 
 	sensorID := r.URL.Query().Get("sensor_id")
