@@ -1,4 +1,4 @@
-package db
+package models
 
 import (
 	"database/sql"
@@ -23,10 +23,15 @@ type MeasurementsQuery struct {
 	SensorID             string
 }
 
+// MeasurementModel represents a measurement model.
+type MeasurementModel struct {
+	DB *sql.DB
+}
+
 // InsertMeasurement inserts a new measurement into the database.
-func InsertMeasurement(db *sql.DB, measurement Measurement) (bool, error) {
+func (m MeasurementModel) InsertMeasurement(measurement Measurement) (bool, error) {
 	query := `insert into "measurements"("timestamp", "sensor_id", "iaq",  "co2", "voc", "pressure", "temperature", "humidity") values($1, $2, $3, $4, $5, $6, $7, $8)`
-	_, err := db.Exec(query, measurement.Timestamp, measurement.SensorID, measurement.IAQ, measurement.CO2, measurement.VOC, measurement.Pressure, measurement.Temperature, measurement.Humidity)
+	_, err := m.DB.Exec(query, measurement.Timestamp, measurement.SensorID, measurement.IAQ, measurement.CO2, measurement.VOC, measurement.Pressure, measurement.Temperature, measurement.Humidity)
 
 	if err != nil {
 		return false, err
@@ -36,7 +41,7 @@ func InsertMeasurement(db *sql.DB, measurement Measurement) (bool, error) {
 }
 
 // GetMeasurements returns measurements aggregated by resolution (ms) between fromEpoch and toEpoch.
-func GetMeasurements(db *sql.DB, mq MeasurementsQuery) ([]Measurement, error) {
+func (m MeasurementModel) GetMeasurements(mq MeasurementsQuery) ([]Measurement, error) {
 	query := `
 	select (floor("timestamp"/$1)*$1)::numeric::integer as timestamp, sensor_id, 
 	avg(iaq) as iaq, 
@@ -50,7 +55,7 @@ func GetMeasurements(db *sql.DB, mq MeasurementsQuery) ([]Measurement, error) {
 	order by timestamp asc
 	`
 
-	rows, err := db.Query(query, mq.Resolution, mq.StartEpoch, mq.EndEpoch, mq.SensorID)
+	rows, err := m.DB.Query(query, mq.Resolution, mq.StartEpoch, mq.EndEpoch, mq.SensorID)
 
 	if err != nil {
 		return nil, err

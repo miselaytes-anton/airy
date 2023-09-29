@@ -1,10 +1,9 @@
 package api
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
-	database "server/db"
+	models "server/models"
 	"strconv"
 	"time"
 
@@ -13,9 +12,9 @@ import (
 	"github.com/go-echarts/go-echarts/v2/types"
 )
 
-type valueGetter func(measurement database.Measurement) float64
+type valueGetter func(measurement models.Measurement) float64
 
-func generateLineItemsFromMeasurements(measurements []database.Measurement, getValue valueGetter) []opts.LineData {
+func generateLineItemsFromMeasurements(measurements []models.Measurement, getValue valueGetter) []opts.LineData {
 	items := make([]opts.LineData, 0)
 
 	for _, measurement := range measurements {
@@ -63,10 +62,10 @@ func getEndOfDay(t time.Time, location *time.Location) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 0, location)
 }
 
-func parseParams(r *http.Request) (database.MeasurementsQuery, error) {
+func parseParams(r *http.Request) (models.MeasurementsQuery, error) {
 	amsterdam, err := time.LoadLocation("Europe/Amsterdam")
 	if err != nil {
-		return database.MeasurementsQuery{}, err
+		return models.MeasurementsQuery{}, err
 	}
 	dateStr := r.URL.Query().Get("date")
 
@@ -74,7 +73,7 @@ func parseParams(r *http.Request) (database.MeasurementsQuery, error) {
 	if dateStr != "" {
 		date, err = time.Parse("2006-01-02", dateStr)
 		if err != nil {
-			return database.MeasurementsQuery{}, err
+			return models.MeasurementsQuery{}, err
 		}
 	} else {
 		date = time.Now().In(amsterdam)
@@ -90,7 +89,7 @@ func parseParams(r *http.Request) (database.MeasurementsQuery, error) {
 	} else {
 		res, err := strconv.ParseInt(resolutionStr, 10, 32)
 		if err != nil {
-			return database.MeasurementsQuery{}, err
+			return models.MeasurementsQuery{}, err
 		}
 		resolution = int(res)
 	}
@@ -100,7 +99,7 @@ func parseParams(r *http.Request) (database.MeasurementsQuery, error) {
 		sensorID = "livingroom"
 	}
 
-	return database.MeasurementsQuery{
+	return models.MeasurementsQuery{
 		StartEpoch: startEpoch,
 		EndEpoch:   endEpoch,
 		Resolution: resolution,
@@ -109,7 +108,7 @@ func parseParams(r *http.Request) (database.MeasurementsQuery, error) {
 
 }
 
-func graphsHandler(db *sql.DB) http.HandlerFunc {
+func graphsHandler(env *ServerEnv) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params, err := parseParams(r)
 		if err != nil {
@@ -119,28 +118,35 @@ func graphsHandler(db *sql.DB) http.HandlerFunc {
 
 		fmt.Printf("Getting measurements for: %+v\n", params)
 
-		measurements, err := database.GetMeasurements(db, params)
+		measurements, err := env.Measurements.GetMeasurements(params)
 		if err != nil {
 			fmt.Fprintf(w, "Error getting measurements: %s", err)
 			return
 		}
 
-		iaqLineItems := generateLineItemsFromMeasurements(measurements, func(m database.Measurement) float64 { return m.IAQ })
+		iaqLineItems := generateLineItemsFromMeasurements(measurements, func(m models.Measurement) float64 { return m.IAQ })
 		iaqChart := makeChart(params.SensorID, iaqLineItems, "IAQ", params.StartEpoch, params.EndEpoch)
 		iaqChart.Render(w)
 
-		humidityLineItems := generateLineItemsFromMeasurements(measurements, func(m database.Measurement) float64 { return m.Humidity })
+		humidityLineItems := generateLineItemsFromMeasurements(measurements, func(m models.Measurement) float64 { return m.Humidity })
 		humidityChart := makeChart(params.SensorID, humidityLineItems, "Humidity", params.StartEpoch, params.EndEpoch)
 		humidityChart.Render(w)
 
-		temperatureLineItems := generateLineItemsFromMeasurements(measurements, func(m database.Measurement) float64 { return m.Temperature })
+		temperatureLineItems := generateLineItemsFromMeasurements(measurements, func(m models.Measurement) float64 { return m.Temperature })
 		temperatureChart := makeChart(params.SensorID, temperatureLineItems, "Temperature", params.StartEpoch, params.EndEpoch)
 		temperatureChart.Render(w)
 	}
 }
 
+// ServerEnv represents the environment containing server dependencies.
+type ServerEnv struct {
+	Measurements interface {
+		GetMeasurements(mq models.MeasurementsQuery) ([]models.Measurement, error)
+	}
+}
+
 // StartServer starts the http server.
-func StartServer(db *sql.DB) {
-	http.HandleFunc("/graphs", graphsHandler(db))
+func StartServer(env *ServerEnv) {
+	http.HandleFunc("/graphs", graphsHandler(env))
 	http.ListenAndServe(":8081", nil)
 }

@@ -15,6 +15,7 @@ import (
 
 	api "server/api"
 	messageprocessor "server/messageProcessor"
+	models "server/models"
 
 	_ "github.com/lib/pq"
 )
@@ -22,6 +23,9 @@ import (
 const (
 	defaultBrokerAddress    = "tcp://mosquitto:1883"
 	defaultPostgressAddress = "postgres://tatadata:tatadata@postgres:5432/tatadata?sslmode=disable"
+	mqttClientID            = "tatadata"
+	measurementTopic        = "measurement"
+	measurementQOS          = 1
 )
 
 func getBrokerAdress() string {
@@ -52,10 +56,35 @@ func main() {
 		log.Fatal(err)
 	}
 
-	p := messageprocessor.NewMessageProcessor(getBrokerAdress(), db)
+	measurements := models.MeasurementModel{DB: db}
+
+	handler := messageprocessor.MeasurementHandler{
+		Measurements: measurements,
+	}
+
+	options := messageprocessor.MqttClientOpts{
+		BrokerAddress: getBrokerAdress(),
+		ClientID:      mqttClientID,
+		MessageHandlers: messageprocessor.MessageHandlers{
+			measurementTopic: {
+				Handler: handler.OnMessageHandler,
+				QOS:     measurementQOS,
+			},
+		},
+	}
+
+	mqttClient := messageprocessor.MakeMqttClient(options)
+
+	p := messageprocessor.MessageProcessor{
+		Client: mqttClient,
+	}
 	p.EnableMqttLogging()
 	p.StartProcessing()
-	api.StartServer(db)
+
+	serverEnv := &api.ServerEnv{
+		Measurements: measurements,
+	}
+	api.StartServer(serverEnv)
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
