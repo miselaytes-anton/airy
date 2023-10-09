@@ -35,7 +35,7 @@ void checkIaqSensorStatus()
       output = "BSEC error code : " + String(iaqSensor.bsecStatus);
       Serial.println(output);
       for (;;)
-        errLeds(); /* Halt in case of failure */
+        blinkLed(200); /* Halt in case of failure */
     } else {
       output = "BSEC warning code : " + String(iaqSensor.bsecStatus);
       Serial.println(output);
@@ -47,7 +47,7 @@ void checkIaqSensorStatus()
       output = "BME68X error code : " + String(iaqSensor.bme68xStatus);
       Serial.println(output);
       for (;;)
-        errLeds(); /* Halt in case of failure */
+        blinkLed(200); /* Halt in case of failure */
     } else {
       output = "BME68X warning code : " + String(iaqSensor.bme68xStatus);
       Serial.println(output);

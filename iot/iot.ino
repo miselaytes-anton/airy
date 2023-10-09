@@ -11,7 +11,7 @@ char sensorId[] = SENSOR_ID;
 char mqttHost[] = MQTT_HOST;
 int mqttPort  = 1883;
 char mqttTopic[] = "measurement";
-long mqttMessageInterval = 60000;
+long mqttMessageInterval = 1000;
 long lastMqttMessageSentMillis = 0;
 
 WiFiClient wifiClient;
@@ -33,6 +33,8 @@ void setup(void)
 // Function that is looped forever
 void loop(void)
 {
+  ledOn();
+
   if (WiFi.status() != WL_CONNECTED) {
     conectToWiFi(ssid, pass);
   }
@@ -44,10 +46,8 @@ void loop(void)
   mqttClient.poll();
 
   unsigned long currentMillis = millis();
-  if (iaqSensor.run()) { // If new data is available
-    digitalWrite(LED_BUILTIN, LOW);
-    digitalWrite(LED_BUILTIN, HIGH);
-
+  // If new data is available
+  if (iaqSensor.run()) { 
     if (currentMillis - lastMqttMessageSentMillis >= mqttMessageInterval) {
       // save the last time a message was sent
       lastMqttMessageSentMillis = currentMillis;
@@ -57,13 +57,4 @@ void loop(void)
   } else {
     checkIaqSensorStatus();
   }
-}
-
-void errLeds(void)
-{
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(100);
-  digitalWrite(LED_BUILTIN, LOW);
-  delay(100);
 }

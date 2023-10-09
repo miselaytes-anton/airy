@@ -4,6 +4,7 @@ void conectToWiFi(char ssid[], char pass[]) {
   Serial.println(ssid);
   while (WiFi.begin(ssid, pass) != WL_CONNECTED) {
     // failed, retry
+    ledOff();
     Serial.print(".");
     delay(5000);
   }

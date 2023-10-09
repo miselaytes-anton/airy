@@ -3,6 +3,7 @@ void connectToMqttBroker(char host[], int port) {
   Serial.println(host);
 
   while (!mqttClient.connect(host, port)) {
+    ledOff();
     Serial.print(".");
     delay(5000);
   }
