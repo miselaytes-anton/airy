@@ -11,7 +11,7 @@ char sensorId[] = SENSOR_ID;
 char mqttHost[] = MQTT_HOST;
 int mqttPort  = 1883;
 char mqttTopic[] = "measurement";
-long mqttMessageInterval = 1000;
+long mqttMessageInterval = 60000;
 long lastMqttMessageSentMillis = 0;
 
 WiFiClient wifiClient;
