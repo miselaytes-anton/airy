@@ -2,6 +2,8 @@ package models
 
 import (
 	"database/sql"
+
+	"github.com/lib/pq"
 )
 
 // Measurement represents a single measurement.
@@ -20,7 +22,7 @@ type Measurement struct {
 type MeasurementsQuery struct {
 	StartEpoch, EndEpoch int64
 	Resolution           int
-	SensorID             string
+	SensorIDs            []string
 }
 
 // MeasurementModel represents a measurement model.
@@ -50,12 +52,12 @@ func (m MeasurementModel) GetMeasurements(mq MeasurementsQuery) ([]Measurement, 
 	avg(pressure) as pressure, avg(co2) as co2, 
 	avg(voc) as voc
 	from "measurements"
-	where sensor_id = $4 and "timestamp" >= $2 and "timestamp" <= $3
+	where sensor_id = any($4) and "timestamp" >= $2 and "timestamp" <= $3
 	group by (floor("timestamp"/$1)*$1)::numeric::integer, sensor_id
 	order by timestamp asc
 	`
 
-	rows, err := m.DB.Query(query, mq.Resolution, mq.StartEpoch, mq.EndEpoch, mq.SensorID)
+	rows, err := m.DB.Query(query, mq.Resolution, mq.StartEpoch, mq.EndEpoch, pq.Array(mq.SensorIDs))
 
 	if err != nil {
 		return nil, err

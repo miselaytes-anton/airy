@@ -109,7 +109,7 @@ func main() {
 			case <-time.After(DELAY):
 				count++
 
-				t := client.Publish(TOPIC, QOS, false, "livingroom 51.86 607.44 0.52 100853 27.25 60.22")
+				t := client.Publish(TOPIC, QOS, false, "bedroom 51.86 607.44 0.52 100853 27.25 60.22")
 				// Handle the token in a go routine so this loop keeps sending messages regardless of delivery status
 				go func() {
 					_ = t.Wait() // Can also use '<-t.Done()' in releases > 1.2.0

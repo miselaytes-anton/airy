@@ -13,23 +13,24 @@ import (
 )
 
 type valueGetter func(measurement models.Measurement) float64
+type lineItemsPerSensor map[string][]opts.LineData
+type measurementsPerSensor map[string][]models.Measurement
 
-func generateLineItemsFromMeasurements(measurements []models.Measurement, getValue valueGetter) []opts.LineData {
-	items := make([]opts.LineData, 0)
+var sensorIDs = []string{"bedroom", "livingroom"}
 
-	for _, measurement := range measurements {
-		items = append(items, opts.LineData{
-			Value: []interface{}{
-				time.Unix(measurement.Timestamp, 0),
-				getValue(measurement),
-			},
-		})
+func generateLineItemsFromMeasurements(measurementsPerSensor measurementsPerSensor, getValue valueGetter) lineItemsPerSensor {
+	items := make(lineItemsPerSensor)
+
+	for sensorID, measurements := range measurementsPerSensor {
+		for _, measurement := range measurements {
+			items[sensorID] = append(items[sensorID], opts.LineData{Value: []interface{}{time.Unix(measurement.Timestamp, 0), getValue(measurement)}})
+		}
 	}
 
 	return items
 }
 
-func makeChart(sensorID string, lineItems []opts.LineData, title string, startEpoch int64, endEpoch int64) *charts.Line {
+func makeChart(items lineItemsPerSensor, title string, startEpoch int64, endEpoch int64) *charts.Line {
 	// create a new line instance
 	line := charts.NewLine()
 	// set some global options like Title/Legend/ToolTip or anything else
@@ -47,9 +48,10 @@ func makeChart(sensorID string, lineItems []opts.LineData, title string, startEp
 		charts.WithTooltipOpts(opts.Tooltip{Show: true, Trigger: "axis", TriggerOn: "click"}),
 	)
 
-	// Put data into instance
-	line.AddSeries(sensorID, lineItems).
-		SetSeriesOptions(charts.WithLineChartOpts(opts.LineChart{Smooth: true}))
+	// Create line graphs for each sensor with keys ordered alphabetically
+	for _, sensorID := range sensorIDs {
+		line.AddSeries(sensorID, items[sensorID]).SetSeriesOptions(charts.WithLineChartOpts(opts.LineChart{Smooth: true}))
+	}
 
 	return line
 }
@@ -94,16 +96,11 @@ func parseParams(r *http.Request) (models.MeasurementsQuery, error) {
 		resolution = int(res)
 	}
 
-	sensorID := r.URL.Query().Get("sensor_id")
-	if sensorID == "" {
-		sensorID = "livingroom"
-	}
-
 	return models.MeasurementsQuery{
 		StartEpoch: startEpoch,
 		EndEpoch:   endEpoch,
 		Resolution: resolution,
-		SensorID:   sensorID,
+		SensorIDs:  sensorIDs,
 	}, nil
 
 }
@@ -124,16 +121,22 @@ func graphsHandler(env *ServerEnv) http.HandlerFunc {
 			return
 		}
 
-		iaqLineItems := generateLineItemsFromMeasurements(measurements, func(m models.Measurement) float64 { return m.IAQ })
-		iaqChart := makeChart(params.SensorID, iaqLineItems, "IAQ", params.StartEpoch, params.EndEpoch)
+		measurementsPerSensor := make(measurementsPerSensor)
+
+		for _, measurement := range measurements {
+			measurementsPerSensor[measurement.SensorID] = append(measurementsPerSensor[measurement.SensorID], measurement)
+		}
+
+		iaqLineItems := generateLineItemsFromMeasurements(measurementsPerSensor, func(m models.Measurement) float64 { return m.IAQ })
+		iaqChart := makeChart(iaqLineItems, "IAQ", params.StartEpoch, params.EndEpoch)
 		iaqChart.Render(w)
 
-		humidityLineItems := generateLineItemsFromMeasurements(measurements, func(m models.Measurement) float64 { return m.Humidity })
-		humidityChart := makeChart(params.SensorID, humidityLineItems, "Humidity", params.StartEpoch, params.EndEpoch)
+		humidityLineItems := generateLineItemsFromMeasurements(measurementsPerSensor, func(m models.Measurement) float64 { return m.Humidity })
+		humidityChart := makeChart(humidityLineItems, "Humidity", params.StartEpoch, params.EndEpoch)
 		humidityChart.Render(w)
 
-		temperatureLineItems := generateLineItemsFromMeasurements(measurements, func(m models.Measurement) float64 { return m.Temperature })
-		temperatureChart := makeChart(params.SensorID, temperatureLineItems, "Temperature", params.StartEpoch, params.EndEpoch)
+		temperatureLineItems := generateLineItemsFromMeasurements(measurementsPerSensor, func(m models.Measurement) float64 { return m.Temperature })
+		temperatureChart := makeChart(temperatureLineItems, "Temperature", params.StartEpoch, params.EndEpoch)
 		temperatureChart.Render(w)
 	}
 }
