@@ -180,6 +180,10 @@ func graphsHandler(env *ServerEnv) http.HandlerFunc {
 			measurementsPerSensor[measurement.SensorID] = append(measurementsPerSensor[measurement.SensorID], measurement)
 		}
 
+		co2LineItems := generateLineItemsFromMeasurements(measurementsPerSensor, func(m models.Measurement) float64 { return m.CO2 })
+		co2Chart := makeChart(co2LineItems, "CO2", params.StartEpoch, params.EndEpoch)
+		co2Chart.Render(w)
+
 		vocLineItems := generateLineItemsFromMeasurements(measurementsPerSensor, func(m models.Measurement) float64 { return m.VOC })
 		vocChart := makeChart(vocLineItems, "VOC", params.StartEpoch, params.EndEpoch)
 		vocChart.Render(w)

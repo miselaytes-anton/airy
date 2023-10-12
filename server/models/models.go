@@ -49,7 +49,8 @@ func (m MeasurementModel) GetMeasurements(mq MeasurementsQuery) ([]Measurement, 
 	avg(iaq) as iaq, 
 	avg(humidity) as humidity,
 	avg(temperature) as temperature,
-	avg(pressure) as pressure, avg(co2) as co2, 
+	avg(pressure) as pressure, 
+	avg(co2) as co2, 
 	avg(voc) as voc
 	from "measurements"
 	where sensor_id = any($4) and "timestamp" >= $2 and "timestamp" <= $3
