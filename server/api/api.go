@@ -16,7 +16,7 @@ type valueGetter func(measurement models.Measurement) float64
 type lineItemsPerSensor map[string][]opts.LineData
 type measurementsPerSensor map[string][]models.Measurement
 
-var sensorIDs = []string{"bedroom", "livingroom"}
+var sensorIDs = []string{"livingroom", "bedroom"}
 
 func generateLineItemsFromMeasurements(measurementsPerSensor measurementsPerSensor, getValue valueGetter) lineItemsPerSensor {
 	items := make(lineItemsPerSensor)
