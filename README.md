@@ -1,58 +1,27 @@
-Docker example
-==============
+## VM setup
 
-This folder contains all that is needed to build an environment with a publisher, broker (mosquitto) and subscriber
-using docker (ideally `docker-compose`). While it provides an end-to-end example its primary purpose is to act as a
-starting point for producing reproducible examples (when logging an issue with the library).
-
-Because the publisher (`pub`), broker (`mosquitto`) and subscriber (`sub`) run in separate containers this setup closely
-simulates a real deployment. One thing to bear in mind is that the network between the containers is very fast and
-reliable (but there are some techniques that can be used to simulate failures etc).
-
-# Usage
-
-Ensure that you have [docker](https://docs.docker.com/get-docker/) and
-[docker-compose](https://docs.docker.com/compose/install/) installed.
-
-To start everything up change into the `cmd/docker` folder and run:
+### Access
+Applications running in docker can be accessed from exteranl host as well.
+This is because ` sudo ufw status` gives us:
 
 ```
-docker-compose up --build --detach
+To                         Action      From
+--                         ------      ----
+22/tcp                     LIMIT       Anywhere
+2375/tcp                   ALLOW       Anywhere
+2376/tcp                   ALLOW       Anywhere
+22/tcp (v6)                LIMIT       Anywhere (v6)
+2375/tcp (v6)              ALLOW       Anywhere (v6)
+2376/tcp (v6)              ALLOW       Anywhere (v6)
 ```
 
-This will start everything up in the background. You can see what is happening by running:
+Where 2375/tcp and 2376/tcp rules are giving docker permission to route requests to any open port on the host machine. Docker usese it to expose container ports. See also [uwf](https://wiki.ubuntu.com/UncomplicatedFirewall) docs.
+
+### SSL
+Certificates are configured using certbot
 
 ```
-docker-compose logs --follow
+sudo certbot --nginx -d amiselaytes.com -d tatadata.amiselaytes.com
 ```
 
-This will display a lot of information (mosquitto is running with debug level logging). To see the subscriber logs:
-
-```
-docker-compose logs --follow sub
-```
-
-Note: Messages received by the subscriber will be written to `shared/receivedMessages` (you may want to delete the
-contents of this file from time to time!).
-
-To stop everything run:
-
-```
-docker-compose down
-```
-
-Feel free to copy the folder and modify the publisher/subscriber to work as you want them to!
-
-Note: The `pub` and `sub` containers connect to mosquitto via the internal network (`test-net`) but mosquitto should
-also be available on the host port `8883` if you wish to connect to it. This will not work if you have mosquitto
-installed locally (edit the `docker-compose.yml` and change the `published` port).
-
-# Simulating Network Connection Loss
-
-You can simulate the loss of network connectivity by disconnecting the network adapter within a container. e.g.
-
-```
-docker network disconnect lostpackets_test-net lostpackets_pub_1
-docker network connect lostpackets_test-net lostpackets_pub_1
-```
-  
+See also [those docs](https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-20-04)

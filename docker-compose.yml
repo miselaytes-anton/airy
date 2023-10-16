@@ -16,21 +16,11 @@ services:
       - type: bind
         source: ./__binds/postgresql/docker-entrypoint-initdb.d
         target: /docker-entrypoint-initdb.d
-    ports:
-      - target: 5432
-        published: 5432
-        protocol: tcp
-        mode: host
   mosquitto:
     restart: always
     image: eclipse-mosquitto
     networks:
       - tatadata-net
-    ports:
-      - target: 1883
-        published: 1883
-        protocol: tcp
-        mode: host
     volumes:
       - type: bind
         source: ./__binds/mosquitto/config
@@ -42,23 +32,6 @@ services:
       - type: bind
         source: ./__binds/mosquitto/log
         target: /mosquitto/log
-  test-publisher:
-    build: test-publisher/.
-    networks:
-      - tatadata-net
-    depends_on:
-      - mosquitto
-  server:
-    restart: always
-    ports:
-    - target: 8081
-      published: 8081
-    build: server/.
-    networks:
-      - tatadata-net
-    depends_on:
-      - mosquitto
-      - postgres
 networks:
   tatadata-net:
     external: false
