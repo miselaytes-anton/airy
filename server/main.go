@@ -21,27 +21,25 @@ import (
 )
 
 const (
-	defaultBrokerAddress    = "tcp://mosquitto:1883"
-	defaultPostgressAddress = "postgres://tatadata:tatadata@postgres:5432/tatadata?sslmode=disable"
-	mqttClientID            = "tatadata"
-	measurementTopic        = "measurement"
-	measurementQOS          = 1
+	mqttClientID     = "tatadata"
+	measurementTopic = "measurement"
+	measurementQOS   = 1
 )
 
 func getBrokerAdress() string {
 	value, ok := os.LookupEnv("BROKER_ADDRESS")
-	if ok {
-		return value
+	if ok == false {
+		panic("BROKER_ADDRESS environment variable not set")
 	}
-	return defaultBrokerAddress
+	return value
 }
 
 func getPostgresAddress() string {
 	value, ok := os.LookupEnv("POSTGRES_ADDRESS")
-	if ok {
-		return value
+	if ok == false {
+		panic("POSTGRES_ADDRESS environment variable not set")
 	}
-	return defaultPostgressAddress
+	return value
 }
 
 func main() {

@@ -22,6 +22,9 @@ services:
     depends_on:
       - mosquitto
       - postgres
+    environment:
+      - BROKER_ADDRESS=${BROKER_ADDRESS}
+      - POSTGRES_ADDRESS=${POSTGRES_ADDRESS}
 networks:
   tatadata-net:
     external: false

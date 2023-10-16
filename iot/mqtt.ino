@@ -1,6 +1,7 @@
-void connectToMqttBroker(char host[], int port) {
+void connectToMqttBroker(char host[], int port, char username[], char password[]) {
   Serial.print("Attempting to connect to the MQTT host: ");
   Serial.println(host);
+  mqttClient.setUsernamePassword(username, password);
 
   while (!mqttClient.connect(host, port)) {
     ledOff();

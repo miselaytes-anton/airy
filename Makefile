@@ -25,7 +25,7 @@ docker-dev:
 .PHONY:docker-dev
 
 server:
-	source .env.dev && go run ./server
+	source .env && go run ./server
 .PHONY:server
 
 build: vet

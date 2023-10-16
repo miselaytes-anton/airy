@@ -9,7 +9,9 @@ char ssid[] = SECRET_SSID;
 char pass[] = SECRET_PASS;
 char sensorId[] = SENSOR_ID;
 char mqttHost[] = MQTT_HOST;
-int mqttPort  = 1883;
+char mqttUsername[] = MQTT_USERNAME;
+char mqttPassword[] = MQTT_PASSWORD;
+int mqttPort  = MQTT_PORT;
 char mqttTopic[] = "measurement";
 long mqttMessageInterval = 60000;
 long lastMqttMessageSentMillis = 0;
@@ -26,7 +28,7 @@ void setup(void)
   delay(5000);
 
   conectToWiFi(ssid, pass);
-  connectToMqttBroker(mqttHost, mqttPort);
+  connectToMqttBroker(mqttHost, mqttPort, mqttUsername, mqttPassword);
   setupSensors();
 }
 
@@ -39,7 +41,7 @@ void loop(void)
     conectToWiFi(ssid, pass);
   }
   if (!mqttClient.connected()) {
-    connectToMqttBroker(mqttHost, mqttPort);
+    connectToMqttBroker(mqttHost, mqttPort, mqttUsername, mqttPassword);
   }
   // call poll() regularly to allow the library to send MQTT keep alive which
   // avoids being disconnected by the broker
