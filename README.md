@@ -1,3 +1,19 @@
+## Local development
+
+### Setup .env file
+
+```
+cp .env.sample .env 
+```
+Now modify env to provide correct values.
+
+### Start docker with services and the server
+
+```
+make docker-dev
+make server
+```
+
 ## VM setup
 
 ### Access
