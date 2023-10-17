@@ -21,6 +21,11 @@ services:
     image: eclipse-mosquitto
     networks:
       - tatadata-net
+    ports:
+      - target: 1883
+        published: 1883
+        protocol: tcp
+        mode: host
     volumes:
       - type: bind
         source: ./__binds/mosquitto/config

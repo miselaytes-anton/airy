@@ -1,18 +1,8 @@
 version: "3.8"
-services:
-  mosquitto:
-    ports:
-      - target: 1883
-        published: 1883
-        protocol: tcp
-        mode: host
-        
+services:      
   postgres:
     ports:
       - target: 5432
         published: 5432
         protocol: tcp
         mode: host
-networks:
-  tatadata-net:
-    external: false

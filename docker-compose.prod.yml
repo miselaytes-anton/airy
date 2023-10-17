@@ -1,16 +1,5 @@
 version: "3.8"
 services:
-  mosquitto:
-    ports:
-      - target: 8883
-        published: 8883
-        protocol: tcp
-        mode: host
-      - target: 1883
-        published: 1883
-        protocol: tcp
-        mode: host
-
   server:
     restart: always
     ports:
@@ -25,6 +14,3 @@ services:
     environment:
       - BROKER_ADDRESS=${BROKER_ADDRESS}
       - POSTGRES_ADDRESS=${POSTGRES_ADDRESS}
-networks:
-  tatadata-net:
-    external: false
