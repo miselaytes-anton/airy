@@ -74,3 +74,8 @@ stream {
   }
 }
 ```
+
+Command for testing SSL connection:
+```
+mosquitto_pub -d -h $MQTT_HOST -p $MQTT_PORT -t "topic/test" -m "test123" -i "some-client-id" -u $MQTT_USER -P $MQTT_PASSWORD --cafile $CA_CHAIN_PEM_PATH
+```

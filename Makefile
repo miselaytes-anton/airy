@@ -1,5 +1,9 @@
 .DEFAULT_GOAL := build
 
+include .env
+
+MESSAGE = bedroom 51.86 607.44 0.52 100853 27.25 60.22
+
 clean-db:
 	rm -rf ./__binds/postgresql/data/*
 .PHONY:fmt
@@ -25,8 +29,12 @@ docker-dev:
 .PHONY:docker-dev
 
 server:
-	source .env && go run ./server
+	set -a && source .env && set +a && go run ./server	
 .PHONY:server
+
+test-publisher:
+	docker run eclipse-mosquitto -- mosquitto_pub -d -L ${BROKER_ADDRESS}/measurement -m "${MESSAGE}" -i "test-publisher"
+.PHONY:test-publisher
 
 build: vet
 	go build ./
