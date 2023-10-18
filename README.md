@@ -1,22 +1,22 @@
-## Local development
+# Local development
 
-### Setup .env file
+## Setup .env file
 
 ```
 cp .env.sample .env 
 ```
 Now modify env to provide correct values.
 
-### Start docker with services and the server
+## Start docker with services and the server
 
 ```
 make docker-dev
 make server
 ```
 
-## VM setup
+# VM setup
 
-### Access
+## Access
 Applications running in docker can be accessed from exteranl host as well.
 This is because `sudo ufw status` gives us:
 
@@ -33,9 +33,9 @@ To                         Action      From
 
 Where 2375/tcp and 2376/tcp rules are giving docker permission to route requests to any open port on the host machine. Docker usese it to expose container ports. See also [uwf](https://wiki.ubuntu.com/UncomplicatedFirewall) docs.
 
-### SSL
+## SSL
 
-#### Reminder of how SSL works
+### Reminder of how SSL works
 
 - Browser connects to a web server (website) secured with SSL (https). Browser requests that the server identify itself.
 - Server sends a copy of its SSL Certificate, including the server’s public key.
@@ -43,7 +43,7 @@ Where 2375/tcp and 2376/tcp rules are giving docker permission to route requests
 - Server decrypts the symmetric session key using its private key and sends back an acknowledgement encrypted with the session key to start the encrypted session.
 - Server and Browser now encrypt all transmitted data with the session key.
 
-#### SSL and MQTT setup
+### SSL setup on the server
 
 Certificates are configured using certbot
 
@@ -56,7 +56,7 @@ See also [those docs](https://www.digitalocean.com/community/tutorials/how-to-se
 
 SSL connection is terminated in NGINX, then traffic from NGINX to MQTT in docker container is not encrypted.
 
-![nginx ssl](./docs/nginx-mqtt-ssl.png "Nginx SSL")
+![nginx ssl](./assets/nginx-mqtt-ssl.png "Nginx SSL")
 
 The following nginx config is used:
 
@@ -77,5 +77,18 @@ stream {
 
 Command for testing SSL connection:
 ```
-mosquitto_pub -d -h $MQTT_HOST -p $MQTT_PORT -t "topic/test" -m "test123" -i "some-client-id" -u $MQTT_USER -P $MQTT_PASSWORD --cafile $CA_CHAIN_PEM_PATH
+make test-publisher
 ```
+
+Ensure correct values in .env file.
+
+### SSL setup on IoT
+
+- download [ROOT CA certificates chain](./assets/ca-chain.pem) from https://amiselaytes.com using browser 
+- convert this file to a C header file using [brssl tool](./scripts/brssl). This tool can be downloaded using instructions [here](https://bearssl.org/#download-and-installation)
+- then run 
+
+```
+brssl ta ./assets/ca-chain.pem > ./iot/trust.h
+```
+- include this file in the arudion code
