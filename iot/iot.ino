@@ -1,7 +1,10 @@
 #include "bsec.h"
 #include <ArduinoMqttClient.h>
 #include <WiFiNINA.h>
+#include <ArduinoBearSSL.h>
+#include <ArduinoECCX08.h>
 #include "arduino_secrets.h"
+#include "trust.h"
 
 // wifi name
 char ssid[] = SECRET_SSID;  
@@ -16,9 +19,18 @@ char mqttTopic[] = "measurement";
 long mqttMessageInterval = 60000;
 long lastMqttMessageSentMillis = 0;
 
-WiFiClient wifiClient;
-MqttClient mqttClient(wifiClient);
+// Used for the TCP socket connection
+WiFiClient    wifiClient;            
+BearSSLClient sslClient(wifiClient, TAs, TAs_NUM);
+// Used for SSL/TLS connection, integrates with ECC508
+MqttClient    mqttClient(sslClient);
+
 Bsec iaqSensor;
+
+unsigned long getTime() {
+  // Get the current time from the WiFi module
+  return WiFi.getTime();
+}
 
 void setup(void)
 {
@@ -26,6 +38,16 @@ void setup(void)
   Serial.begin(115200);
   // while (!Serial) delay(10); // wait for console
   delay(5000);
+
+  // Check the crypto chip module presence (needed for BearSSL)
+  if (!ECCX08.begin()) {
+    Serial.println("No ECCX08 present!");
+    while (1);
+  }
+
+  // Set a callback to get the current time
+  // (used to validate the servers ssl certificate)
+  ArduinoBearSSL.onGetTime(getTime);
 
   conectToWiFi(ssid, pass);
   connectToMqttBroker(mqttHost, mqttPort, mqttUsername, mqttPassword);
