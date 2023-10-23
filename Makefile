@@ -28,6 +28,10 @@ docker-dev:
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 .PHONY:docker-dev
 
+docker-down:
+	docker compose down --remove-orphans
+.PHONY:docker-down
+
 server:
 	set -a && source .env && set +a && go run ./server/cmd/server
 .PHONY:server

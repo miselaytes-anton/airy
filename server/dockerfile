@@ -4,7 +4,7 @@ ENV CGO_ENABLED 0
 
 COPY . /app_src
 WORKDIR /app_src
-RUN go build -gcflags "all=-N -l" -o /app
+RUN go build -gcflags "all=-N -l" -o /app ./cmd/server
 
 # Final stage
 FROM alpine:latest
