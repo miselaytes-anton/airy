@@ -91,7 +91,7 @@ func dateEqual(date1, date2 time.Time) bool {
 	return y1 == y2 && m1 == m2 && d1 == d2
 }
 
-func makeMeasurementsParams(r *http.Request) (models.MeasurementsQuery, error) {
+func makeMeasurementsQueryFromGetGraphsRequest(r *http.Request) (models.MeasurementsQuery, error) {
 	amsterdam, err := time.LoadLocation("Europe/Amsterdam")
 	if err != nil {
 		return models.MeasurementsQuery{}, err
@@ -161,7 +161,7 @@ func makeMeasurementsParams(r *http.Request) (models.MeasurementsQuery, error) {
 
 func graphsHandler(env *ServerEnv) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		params, err := makeMeasurementsParams(r)
+		params, err := makeMeasurementsQueryFromGetGraphsRequest(r)
 		if err != nil {
 			fmt.Fprintf(w, "error parsing params: %s", err)
 			return

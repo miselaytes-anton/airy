@@ -8,14 +8,14 @@ import (
 
 // Measurement represents a single measurement.
 type Measurement struct {
-	Timestamp   int64
-	SensorID    string
-	IAQ         float64
-	CO2         float64
-	VOC         float64
-	Pressure    float64
-	Temperature float64
-	Humidity    float64
+	Timestamp   int64   `json:"timestamp"`
+	SensorID    string  `json:"sensorId"`
+	IAQ         float64 `json:"iaq"`
+	CO2         float64 `json:"co2"`
+	VOC         float64 `json:"voc"`
+	Pressure    float64 `json:"pressure"`
+	Temperature float64 `json:"temperature"`
+	Humidity    float64 `json:"humidity"`
 }
 
 // MeasurementsQuery represents a query for measurements.

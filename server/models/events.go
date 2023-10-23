@@ -16,9 +16,9 @@ type EventsQuery struct {
 
 // Event represents a single event.
 type Event struct {
-	Timestamp  int64
-	LocationID string
-	EventType  string
+	Timestamp  int64  `json:"timestamp"`
+	LocationID string `json:"locationId"`
+	EventType  string `json:"eventType"`
 }
 
 // GetEvents returns events between fromEpoch and toEpoch.

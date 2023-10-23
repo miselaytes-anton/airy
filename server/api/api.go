@@ -19,7 +19,8 @@ type ServerEnv struct {
 
 // StartServer starts the http server.
 func StartServer(env *ServerEnv) {
-	http.HandleFunc("/graphs", graphsHandler(env))
-	http.HandleFunc("/events", eventsHandler(env))
+	http.HandleFunc("/api/graphs", graphsHandler(env))
+	http.HandleFunc("/api/events", eventsHandler(env))
+	http.HandleFunc("/api/measurements", measurementsHandler(env))
 	http.ListenAndServe(":8081", nil)
 }
