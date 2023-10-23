@@ -39,3 +39,7 @@ test-publisher:
 build: vet
 	go build ./
 .PHONY:build
+
+deploy:
+	./scripts/deploy.sh
+.PHONY:deploy
