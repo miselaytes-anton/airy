@@ -29,7 +29,7 @@ docker-dev:
 .PHONY:docker-dev
 
 server:
-	set -a && source .env && set +a && go run ./server	
+	set -a && source .env && set +a && go run ./server/cmd/server
 .PHONY:server
 
 test-publisher:
