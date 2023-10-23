@@ -81,6 +81,7 @@ func main() {
 
 	serverEnv := &api.ServerEnv{
 		Measurements: measurements,
+		Events:       models.EventModel{DB: db},
 	}
 	api.StartServer(serverEnv)
 
