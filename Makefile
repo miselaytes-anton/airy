@@ -49,5 +49,5 @@ deploy:
 .PHONY:deploy
 
 psql:
-	docker exec -it tatadata_postgres_1  psql --user tatadata
+	docker exec -it tatadata-postgres psql --user tatadata
 .PHONY:psql

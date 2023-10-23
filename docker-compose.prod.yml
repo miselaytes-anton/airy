@@ -1,6 +1,7 @@
 version: "3.8"
 services:
   server:
+    container_name: tatadata-server
     restart: always
     ports:
     - target: 8081

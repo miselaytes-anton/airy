@@ -2,6 +2,7 @@ version: "3.8"
 services:
   postgres:
     image: postgres
+    container_name: tatadata-postgres
     networks:
       - tatadata-net
     restart: always
@@ -17,6 +18,7 @@ services:
         source: ./__binds/postgresql/docker-entrypoint-initdb.d
         target: /docker-entrypoint-initdb.d
   mosquitto:
+    container_name: tatadata-mosquitto
     restart: always
     image: eclipse-mosquitto
     networks:
