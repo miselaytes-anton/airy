@@ -13,9 +13,9 @@ import (
 	// postgres driver
 	_ "github.com/lib/pq"
 
-	api "server/api"
-	messageprocessor "server/messageProcessor"
-	models "server/models"
+	api "github.com/miselaytes-anton/tatadata/server/api"
+	messageprocessor "github.com/miselaytes-anton/tatadata/server/messageProcessor"
+	models "github.com/miselaytes-anton/tatadata/server/models"
 
 	_ "github.com/lib/pq"
 )

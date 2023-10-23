@@ -2,8 +2,9 @@ package messageprocessor
 
 import (
 	"fmt"
-	models "server/models"
 	"time"
+
+	models "github.com/miselaytes-anton/tatadata/server/models"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
