@@ -15,7 +15,10 @@ import (
 
 type valueGetter func(measurement models.Measurement) float64
 type lineItemsPerSensor map[string][]opts.LineData
+type markLinesPerSensor map[string][]opts.MarkLineNameXAxisItem
+
 type measurementsPerSensor map[string][]models.Measurement
+type eventsPerSensor map[string][]models.Event
 type viewConfig struct {
 	resolution       int
 	startEpochOffset int64
@@ -49,15 +52,29 @@ func generateLineItemsFromMeasurements(measurementsPerSensor measurementsPerSens
 	return items
 }
 
-func makeChart(items lineItemsPerSensor, title string, startEpoch int64, endEpoch int64) *charts.Line {
+func generateMarkLinesFromEvents(eventsPerSensor eventsPerSensor) markLinesPerSensor {
+	items := make(markLinesPerSensor)
+
+	for sensorID, events := range eventsPerSensor {
+		for _, event := range events {
+			items[sensorID] = append(items[sensorID], opts.MarkLineNameXAxisItem{Name: event.EventType, XAxis: time.Unix(event.Timestamp, 0)})
+		}
+	}
+
+	return items
+}
+
+func makeChart(items lineItemsPerSensor, markLines markLinesPerSensor, title string, startEpoch int64, endEpoch int64) *charts.Line {
 	// create a new line instance
 	line := charts.NewLine()
 	// set some global options like Title/Legend/ToolTip or anything else
 	line.SetGlobalOptions(
-		charts.WithInitializationOpts(opts.Initialization{Theme: types.ThemeWesteros, PageTitle: "Graphs"}),
+		charts.WithInitializationOpts(opts.Initialization{Theme: types.ThemeWesteros, PageTitle: "Graphs", Width: "100%"}),
 		charts.WithTitleOpts(opts.Title{
 			Title: title,
 		}),
+		// disable animation
+		charts.WithAnimation(),
 		charts.WithXAxisOpts(opts.XAxis{
 			Name: "Time",
 			Type: "time",
@@ -69,7 +86,18 @@ func makeChart(items lineItemsPerSensor, title string, startEpoch int64, endEpoc
 
 	// Create line graphs for each sensor with keys ordered alphabetically
 	for _, sensorID := range sensorIDs {
-		line.AddSeries(sensorID, items[sensorID]).SetSeriesOptions(charts.WithLineChartOpts(opts.LineChart{Smooth: true}))
+		seriesOptions := []charts.SeriesOpts{
+			charts.WithLineChartOpts(opts.LineChart{Smooth: true}),
+			charts.WithMarkLineStyleOpts(opts.MarkLineStyle{Symbol: []string{"none"}, Label: &opts.Label{Show: true, Formatter: "{b}"}}),
+		}
+		for _, markLine := range markLines[sensorID] {
+			seriesOptions = append(seriesOptions, charts.WithMarkLineNameXAxisItemOpts(markLine))
+		}
+
+		line.AddSeries(sensorID, items[sensorID]).
+			SetSeriesOptions(
+				seriesOptions...,
+			)
 	}
 
 	return line
@@ -163,7 +191,7 @@ func graphsHandler(env *ServerEnv) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params, err := makeMeasurementsQueryFromGetGraphsRequest(r)
 		if err != nil {
-			fmt.Fprintf(w, "error parsing params: %s", err)
+			fmt.Fprintf(w, "error parsing measurement params: %s", err)
 			return
 		}
 
@@ -175,30 +203,43 @@ func graphsHandler(env *ServerEnv) http.HandlerFunc {
 			return
 		}
 
+		events, err := env.Events.GetEvents(models.EventsQuery{StartEpoch: params.StartEpoch, EndEpoch: params.EndEpoch})
+
+		if err != nil {
+			fmt.Fprintf(w, "error parsing event params: %s", err)
+			return
+		}
+
 		measurementsPerSensor := make(measurementsPerSensor)
 
 		for _, measurement := range measurements {
 			measurementsPerSensor[measurement.SensorID] = append(measurementsPerSensor[measurement.SensorID], measurement)
 		}
 
+		eventsPerSensor := make(eventsPerSensor)
+		for _, event := range events {
+			eventsPerSensor[event.LocationID] = append(eventsPerSensor[event.LocationID], event)
+		}
+		markLinesPerSensor := generateMarkLinesFromEvents(eventsPerSensor)
+
 		co2LineItems := generateLineItemsFromMeasurements(measurementsPerSensor, func(m models.Measurement) float64 { return m.CO2 })
-		co2Chart := makeChart(co2LineItems, "CO2", params.StartEpoch, params.EndEpoch)
+		co2Chart := makeChart(co2LineItems, markLinesPerSensor, "CO2", params.StartEpoch, params.EndEpoch)
 		co2Chart.Render(w)
 
 		vocLineItems := generateLineItemsFromMeasurements(measurementsPerSensor, func(m models.Measurement) float64 { return m.VOC })
-		vocChart := makeChart(vocLineItems, "VOC", params.StartEpoch, params.EndEpoch)
+		vocChart := makeChart(vocLineItems, markLinesPerSensor, "VOC", params.StartEpoch, params.EndEpoch)
 		vocChart.Render(w)
 
 		iaqLineItems := generateLineItemsFromMeasurements(measurementsPerSensor, func(m models.Measurement) float64 { return m.IAQ })
-		iaqChart := makeChart(iaqLineItems, "IAQ", params.StartEpoch, params.EndEpoch)
+		iaqChart := makeChart(iaqLineItems, markLinesPerSensor, "IAQ", params.StartEpoch, params.EndEpoch)
 		iaqChart.Render(w)
 
 		humidityLineItems := generateLineItemsFromMeasurements(measurementsPerSensor, func(m models.Measurement) float64 { return m.Humidity })
-		humidityChart := makeChart(humidityLineItems, "Humidity", params.StartEpoch, params.EndEpoch)
+		humidityChart := makeChart(humidityLineItems, markLinesPerSensor, "Humidity", params.StartEpoch, params.EndEpoch)
 		humidityChart.Render(w)
 
 		temperatureLineItems := generateLineItemsFromMeasurements(measurementsPerSensor, func(m models.Measurement) float64 { return m.Temperature })
-		temperatureChart := makeChart(temperatureLineItems, "Temperature", params.StartEpoch, params.EndEpoch)
+		temperatureChart := makeChart(temperatureLineItems, markLinesPerSensor, "Temperature", params.StartEpoch, params.EndEpoch)
 		temperatureChart.Render(w)
 	}
 }

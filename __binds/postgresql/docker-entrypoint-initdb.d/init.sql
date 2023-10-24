@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXITS measurements (
     PRIMARY KEY (sensor_id, timestamp)
 );
 
-CREATE TABLE IF NOT EXITS events (
+CREATE TABLE events (
     location_id VARCHAR (255) NOT NULL,
     timestamp INT NOT NULL,
     type VARCHAR (255) NOT NULL,
