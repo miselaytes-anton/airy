@@ -9,15 +9,11 @@ clean-db:
 .PHONY:fmt
 
 fmt:
-	go fmt ./
+	go fmt ./server/cmd/server/main.go
 .PHONY:fmt
 
-lint: fmt
-	golint ./
-.PHONY:lint
-
 vet: fmt
-	go vet ./
+	go vet ./server/cmd/server/main.go
 .PHONY:vet
 
 docker-prod:
@@ -41,7 +37,9 @@ test-publisher:
 .PHONY:test-publisher
 
 build: vet
-	go build ./
+	rm -rf ./build
+	mkdir ./build
+	go build  -o ./build/ ./server/cmd/server
 .PHONY:build
 
 deploy:

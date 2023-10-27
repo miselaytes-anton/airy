@@ -8,3 +8,5 @@ __binds/postgresql/data/*
 iot/arduino_secrets.h
 
 .env
+
+/build
