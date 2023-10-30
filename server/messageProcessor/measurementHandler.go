@@ -17,9 +17,9 @@ type MeasurementHandler struct {
 }
 
 // parseMeasurementMessage parses a measurement message which comes in the form of "bedroom 51.86 607.44 0.52 100853 27.25 60.22"
-func parseMeasurementMessage(msg mqtt.Message) (models.Measurement, error) {
+func parseMeasurementMessage(msg string) (models.Measurement, error) {
 	var m models.Measurement
-	if _, err := fmt.Sscanf(string(msg.Payload()), "%s %g %g %g %g %g %g", &m.SensorID, &m.IAQ, &m.CO2, &m.VOC, &m.Pressure, &m.Temperature, &m.Humidity); err != nil {
+	if _, err := fmt.Sscanf(msg, "%s %g %g %g %g %g %g", &m.SensorID, &m.IAQ, &m.CO2, &m.VOC, &m.Pressure, &m.Temperature, &m.Humidity); err != nil {
 		return m, err
 	}
 
@@ -29,7 +29,7 @@ func parseMeasurementMessage(msg mqtt.Message) (models.Measurement, error) {
 // OnMessageHandler is called when a message is received
 func (h MeasurementHandler) OnMessageHandler(_ mqtt.Client, msg mqtt.Message) {
 	fmt.Printf("Received message: %s\n", msg.Payload())
-	m, err := parseMeasurementMessage(msg)
+	m, err := parseMeasurementMessage(string(msg.Payload()))
 	if err != nil {
 		fmt.Printf("Message could not be parsed (%s): %s", msg.Payload(), err)
 	}

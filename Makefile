@@ -8,6 +8,9 @@ clean-db:
 	rm -rf ./__binds/postgresql/data/*
 .PHONY:fmt
 
+test:
+	go test ./server/messageProcessor
+
 fmt:
 	go fmt ./server/cmd/server/main.go
 .PHONY:fmt
