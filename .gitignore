@@ -10,3 +10,5 @@ iot/arduino_secrets.h
 .env
 
 /build
+
+c.out

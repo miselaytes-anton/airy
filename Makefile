@@ -10,6 +10,9 @@ clean-db:
 
 test:
 	go test ./server/messageProcessor
+test-c:
+	go test -v -cover -coverprofile=c.out ./server/messageProcessor
+	go tool cover -html=c.out
 
 fmt:
 	go fmt ./server/cmd/server/main.go
