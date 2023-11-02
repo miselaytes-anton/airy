@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	models "github.com/miselaytes-anton/tatadata/server/models"
+	"github.com/miselaytes-anton/tatadata/server/models"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -32,6 +32,7 @@ func (h MeasurementHandler) OnMessageHandler(_ mqtt.Client, msg mqtt.Message) {
 	m, err := parseMeasurementMessage(string(msg.Payload()))
 	if err != nil {
 		fmt.Printf("Message could not be parsed (%s): %s", msg.Payload(), err)
+		return
 	}
 
 	m.Timestamp = time.Now().Unix()
@@ -42,5 +43,4 @@ func (h MeasurementHandler) OnMessageHandler(_ mqtt.Client, msg mqtt.Message) {
 	if err != nil {
 		fmt.Printf("Measurement could not be inserted into database: %s", err)
 	}
-
 }
