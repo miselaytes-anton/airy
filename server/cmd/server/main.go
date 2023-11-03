@@ -13,11 +13,9 @@ import (
 	// postgres driver
 	_ "github.com/lib/pq"
 
-	api "github.com/miselaytes-anton/tatadata/server/api"
+	"github.com/miselaytes-anton/tatadata/server/api"
 	messageprocessor "github.com/miselaytes-anton/tatadata/server/messageProcessor"
-	models "github.com/miselaytes-anton/tatadata/server/models"
-
-	_ "github.com/lib/pq"
+	"github.com/miselaytes-anton/tatadata/server/models"
 )
 
 const (
@@ -28,7 +26,7 @@ const (
 
 func getBrokerAdress() string {
 	value, ok := os.LookupEnv("BROKER_ADDRESS")
-	if ok == false {
+	if !ok {
 		panic("BROKER_ADDRESS environment variable not set")
 	}
 	return value
@@ -36,7 +34,7 @@ func getBrokerAdress() string {
 
 func getPostgresAddress() string {
 	value, ok := os.LookupEnv("POSTGRES_ADDRESS")
-	if ok == false {
+	if !ok {
 		panic("POSTGRES_ADDRESS environment variable not set")
 	}
 	return value
