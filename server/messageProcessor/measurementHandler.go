@@ -28,10 +28,11 @@ func parseMeasurementMessage(msg string) (models.Measurement, error) {
 
 // OnMessageHandler is called when a message is received
 func (h MeasurementHandler) OnMessageHandler(_ mqtt.Client, msg mqtt.Message) {
-	fmt.Printf("Received message: %s\n", msg.Payload())
-	m, err := parseMeasurementMessage(string(msg.Payload()))
+	payload := string(msg.Payload())
+	fmt.Printf("Received message: %s\n", payload)
+	m, err := parseMeasurementMessage(payload)
 	if err != nil {
-		fmt.Printf("Message could not be parsed (%s): %s", msg.Payload(), err)
+		fmt.Printf("Message could not be parsed (%s): %s", payload, err)
 		return
 	}
 

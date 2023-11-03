@@ -1,7 +1,7 @@
 package messageprocessor_test
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -11,14 +11,24 @@ import (
 	"github.com/miselaytes-anton/tatadata/server/models"
 )
 
+type insertMeasurement = func(m models.Measurement, measurements *[]models.Measurement) (bool, error)
+
 type MeasurementsStub struct {
 	measurements []models.Measurement
+	insertMeasurement
 }
 
 func (m *MeasurementsStub) InsertMeasurement(measurement models.Measurement) (bool, error) {
-	fmt.Println("INSERTING")
-	m.measurements = append(m.measurements, measurement)
+	return m.insertMeasurement(measurement, &m.measurements)
+}
+
+func insertMeasurementsOk(m models.Measurement, measurements *[]models.Measurement) (bool, error) {
+	*measurements = append(*measurements, m)
 	return true, nil
+}
+
+func insertMeasurementsError(m models.Measurement, measurements *[]models.Measurement) (bool, error) {
+	return false, errors.New("database error")
 }
 
 type MqttClientStub struct {
@@ -39,6 +49,7 @@ func TestOnMessageHandler(t *testing.T) {
 		name     string
 		message  string
 		expected []models.Measurement
+		insertMeasurement
 	}{
 		{
 			"valid message",
@@ -52,16 +63,25 @@ func TestOnMessageHandler(t *testing.T) {
 				Temperature: 27.25,
 				Humidity:    60.22,
 			}},
+			insertMeasurementsOk,
 		},
 		{
 			"empty message",
 			"",
 			make([]models.Measurement, 0),
+			insertMeasurementsOk,
 		},
 		{
 			"invalid message",
 			"bedroom something",
 			make([]models.Measurement, 0),
+			insertMeasurementsOk,
+		},
+		{
+			"valid message, database error",
+			"bedroom 51.86 607.44 0.52 100853 27.25 60.22",
+			make([]models.Measurement, 0),
+			insertMeasurementsError,
 		},
 	}
 
@@ -70,7 +90,8 @@ func TestOnMessageHandler(t *testing.T) {
 			d.name,
 			func(t *testing.T) {
 				measurementsStub := MeasurementsStub{
-					measurements: make([]models.Measurement, 0),
+					measurements:      make([]models.Measurement, 0),
+					insertMeasurement: d.insertMeasurement,
 				}
 				handler := messageprocessor.MeasurementHandler{
 					Measurements: &measurementsStub,

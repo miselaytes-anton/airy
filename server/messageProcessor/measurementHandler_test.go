@@ -70,4 +70,5 @@ func Test_parseMeasurementMessage(t *testing.T) {
 			},
 		)
 	}
+
 }
