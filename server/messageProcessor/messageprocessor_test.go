@@ -22,12 +22,12 @@ func (m *MeasurementsStub) InsertMeasurement(measurement models.Measurement) (bo
 	return m.insertMeasurement(measurement, &m.measurements)
 }
 
-func insertMeasurementsOk(m models.Measurement, measurements *[]models.Measurement) (bool, error) {
+func insertMeasurementOk(m models.Measurement, measurements *[]models.Measurement) (bool, error) {
 	*measurements = append(*measurements, m)
 	return true, nil
 }
 
-func insertMeasurementsError(m models.Measurement, measurements *[]models.Measurement) (bool, error) {
+func insertMeasurementError(m models.Measurement, measurements *[]models.Measurement) (bool, error) {
 	return false, errors.New("database error")
 }
 
@@ -63,25 +63,25 @@ func TestOnMessageHandler(t *testing.T) {
 				Temperature: 27.25,
 				Humidity:    60.22,
 			}},
-			insertMeasurementsOk,
+			insertMeasurementOk,
 		},
 		{
 			"empty message",
 			"",
 			make([]models.Measurement, 0),
-			insertMeasurementsOk,
+			insertMeasurementOk,
 		},
 		{
 			"invalid message",
 			"bedroom something",
 			make([]models.Measurement, 0),
-			insertMeasurementsOk,
+			insertMeasurementOk,
 		},
 		{
 			"valid message, database error",
 			"bedroom 51.86 607.44 0.52 100853 27.25 60.22",
 			make([]models.Measurement, 0),
-			insertMeasurementsError,
+			insertMeasurementError,
 		},
 	}
 
