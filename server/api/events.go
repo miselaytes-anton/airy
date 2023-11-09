@@ -32,7 +32,7 @@ func makeEventsQuery(r *http.Request) (models.EventsQuery, error) {
 
 // Handles a POST request to /events by inserting event into the database.
 // Also handles a GET request to /events by returning events between fromEpoch and toEpoch.
-func eventsHandler(env *ServerEnv) http.HandlerFunc {
+func (s *Server) eventsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "POST":
@@ -43,7 +43,7 @@ func eventsHandler(env *ServerEnv) http.HandlerFunc {
 				return
 			}
 
-			_, err = env.Events.InsertEvent(event)
+			_, err = s.Events.InsertEvent(event)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -57,7 +57,7 @@ func eventsHandler(env *ServerEnv) http.HandlerFunc {
 				return
 			}
 
-			events, err := env.Events.GetEvents(q)
+			events, err := s.Events.GetEvents(q)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return

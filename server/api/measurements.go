@@ -38,7 +38,7 @@ func makeMeasurementsQuery(r *http.Request) (models.MeasurementsQuery, error) {
 	return q, nil
 }
 
-func measurementsHandler(env *ServerEnv) http.HandlerFunc {
+func (s *Server) measurementsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
@@ -48,7 +48,7 @@ func measurementsHandler(env *ServerEnv) http.HandlerFunc {
 				return
 			}
 
-			measurements, err := env.Measurements.GetMeasurements(q)
+			measurements, err := s.Measurements.GetMeasurements(q)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -53,6 +54,7 @@ func main() {
 	}
 
 	measurements := models.MeasurementModel{DB: db}
+	events := models.EventModel{DB: db}
 
 	handler := messageprocessor.MeasurementHandler{
 		Measurements: measurements,
@@ -77,11 +79,14 @@ func main() {
 	p.EnableMqttLogging()
 	p.StartProcessing()
 
-	serverEnv := &api.ServerEnv{
+	router := http.NewServeMux()
+	server := &api.Server{
+		Router:       router,
 		Measurements: measurements,
-		Events:       models.EventModel{DB: db},
+		Events:       events,
 	}
-	api.StartServer(serverEnv)
+	server.Routes()
+	http.ListenAndServe(":8081", router)
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
