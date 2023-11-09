@@ -6,7 +6,22 @@ services:
     ports:
     - target: 8081
       published: 8081
-    build: backend/.
+    build: 
+      context: backend/.
+      dockerfile: server.dockerfile
+    networks:
+      - tatadata-net
+    depends_on:
+      - postgres
+    environment:
+      - BROKER_ADDRESS=${BROKER_ADDRESS}
+      - POSTGRES_ADDRESS=${POSTGRES_ADDRESS}
+  processor:
+    container_name: tatadata-processor
+    restart: always
+    build: 
+      context: backend/.
+      dockerfile: processor.dockerfile
     networks:
       - tatadata-net
     depends_on:

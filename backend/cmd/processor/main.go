@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -15,8 +14,22 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/miselaytes-anton/tatadata/backend/models"
-	"github.com/miselaytes-anton/tatadata/backend/server"
+	"github.com/miselaytes-anton/tatadata/backend/processor"
 )
+
+const (
+	mqttClientID     = "tatadata"
+	measurementTopic = "measurement"
+	measurementQOS   = 1
+)
+
+func getBrokerAdress() string {
+	value, ok := os.LookupEnv("BROKER_ADDRESS")
+	if !ok {
+		panic("BROKER_ADDRESS environment variable not set")
+	}
+	return value
+}
 
 func getPostgresAddress() string {
 	value, ok := os.LookupEnv("POSTGRES_ADDRESS")
@@ -39,17 +52,29 @@ func main() {
 	}
 
 	measurements := models.MeasurementModel{DB: db}
-	events := models.EventModel{DB: db}
 
-	router := http.NewServeMux()
-	server := &server.Server{
-		Router:       router,
+	handler := processor.MeasurementHandler{
 		Measurements: measurements,
-		Events:       events,
 	}
-	server.Routes()
-	log.Print("listening on http://localhost:8081")
-	http.ListenAndServe(":8081", router)
+
+	options := processor.MqttClientOpts{
+		BrokerAddress: getBrokerAdress(),
+		ClientID:      mqttClientID,
+		MessageHandlers: processor.MessageHandlers{
+			measurementTopic: {
+				Handler: handler.OnMessageHandler,
+				QOS:     measurementQOS,
+			},
+		},
+	}
+
+	mqttClient := processor.MakeMqttClient(options)
+
+	p := processor.MessageProcessor{
+		Client: mqttClient,
+	}
+	p.EnableMqttLogging()
+	p.StartProcessing()
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
@@ -58,5 +83,6 @@ func main() {
 	<-sig
 	fmt.Println("signal caught - exiting")
 	db.Close()
+	p.StopProcessing()
 	fmt.Println("shutdown complete")
 }

@@ -1,4 +1,4 @@
-package api
+package server
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/miselaytes-anton/tatadata/server/models"
+	"github.com/miselaytes-anton/tatadata/backend/models"
 )
 
 func makeMeasurementsQuery(r *http.Request) (models.MeasurementsQuery, error) {

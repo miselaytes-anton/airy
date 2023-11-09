@@ -38,6 +38,10 @@ server:
 	set -a && source .env && set +a && go run ./backend/cmd/server
 .PHONY:server
 
+processor:
+	set -a && source .env && set +a && go run ./backend/cmd/processor
+.PHONY:processor
+
 test-publisher:
 	docker run eclipse-mosquitto -- mosquitto_pub -d -L ${BROKER_ADDRESS}/measurement -m "${MESSAGE}" -i "test-publisher"
 .PHONY:test-publisher
@@ -46,6 +50,7 @@ build: vet
 	rm -rf ./build
 	mkdir ./build
 	go build  -o ./build/ ./backend/cmd/server
+	go build  -o ./build/ ./backend/cmd/processor
 .PHONY:build
 
 deploy:

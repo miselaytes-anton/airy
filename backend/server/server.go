@@ -1,9 +1,9 @@
-package api
+package server
 
 import (
 	"net/http"
 
-	models "github.com/miselaytes-anton/tatadata/server/models"
+	models "github.com/miselaytes-anton/tatadata/backend/models"
 )
 
 // ServerEnv represents the environment containing server dependencies.
