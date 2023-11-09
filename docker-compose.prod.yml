@@ -6,7 +6,7 @@ services:
     ports:
     - target: 8081
       published: 8081
-    build: server/.
+    build: backend/.
     networks:
       - tatadata-net
     depends_on:

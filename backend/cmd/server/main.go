@@ -86,6 +86,7 @@ func main() {
 		Events:       events,
 	}
 	server.Routes()
+	log.Print("listening on http://localhost:8081")
 	http.ListenAndServe(":8081", router)
 
 	sig := make(chan os.Signal, 1)
