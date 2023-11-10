@@ -51,7 +51,7 @@ func main() {
 		},
 	}
 
-	mqttClient := MakeMqttClient(options)
+	mqttClient := NewMqttClient(options)
 
 	p := Processor{
 		Client:   mqttClient,

@@ -21,7 +21,7 @@ type MqttClientOpts struct {
 }
 
 // MakeMqttClient creates mqtt client.
-func MakeMqttClient(o MqttClientOpts) mqtt.Client {
+func NewMqttClient(o MqttClientOpts) mqtt.Client {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(o.BrokerAddress)
 	opts.SetClientID(o.ClientID)
