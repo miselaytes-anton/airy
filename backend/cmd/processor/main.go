@@ -13,8 +13,8 @@ import (
 	// postgres driver
 	_ "github.com/lib/pq"
 
-	"github.com/miselaytes-anton/tatadata/backend/models"
-	"github.com/miselaytes-anton/tatadata/backend/processor"
+	"github.com/miselaytes-anton/tatadata/backend/internal/config"
+	"github.com/miselaytes-anton/tatadata/backend/internal/models"
 )
 
 const (
@@ -23,24 +23,8 @@ const (
 	measurementQOS   = 1
 )
 
-func getBrokerAdress() string {
-	value, ok := os.LookupEnv("BROKER_ADDRESS")
-	if !ok {
-		panic("BROKER_ADDRESS environment variable not set")
-	}
-	return value
-}
-
-func getPostgresAddress() string {
-	value, ok := os.LookupEnv("POSTGRES_ADDRESS")
-	if !ok {
-		panic("POSTGRES_ADDRESS environment variable not set")
-	}
-	return value
-}
-
 func main() {
-	db, err := sql.Open("postgres", getPostgresAddress())
+	db, err := sql.Open("postgres", config.GetPostgresAddress())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -53,14 +37,14 @@ func main() {
 
 	measurements := models.MeasurementModel{DB: db}
 
-	handler := processor.MeasurementHandler{
+	handler := MeasurementHandler{
 		Measurements: measurements,
 	}
 
-	options := processor.MqttClientOpts{
-		BrokerAddress: getBrokerAdress(),
+	options := MqttClientOpts{
+		BrokerAddress: config.GetBrokerAdress(),
 		ClientID:      mqttClientID,
-		MessageHandlers: processor.MessageHandlers{
+		MessageHandlers: MessageHandlers{
 			measurementTopic: {
 				Handler: handler.OnMessageHandler,
 				QOS:     measurementQOS,
@@ -68,9 +52,9 @@ func main() {
 		},
 	}
 
-	mqttClient := processor.MakeMqttClient(options)
+	mqttClient := MakeMqttClient(options)
 
-	p := processor.MessageProcessor{
+	p := MessageProcessor{
 		Client: mqttClient,
 	}
 	p.EnableMqttLogging()

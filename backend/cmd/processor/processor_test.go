@@ -1,4 +1,4 @@
-package processor_test
+package main
 
 import (
 	"errors"
@@ -7,8 +7,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/miselaytes-anton/tatadata/backend/models"
-	"github.com/miselaytes-anton/tatadata/backend/processor"
+	"github.com/miselaytes-anton/tatadata/backend/internal/models"
 )
 
 type insertMeasurement = func(m models.Measurement, measurements *[]models.Measurement) (bool, error)
@@ -93,7 +92,7 @@ func TestOnMessageHandler(t *testing.T) {
 					measurements:      make([]models.Measurement, 0),
 					insertMeasurement: d.insertMeasurement,
 				}
-				handler := processor.MeasurementHandler{
+				handler := MeasurementHandler{
 					Measurements: &measurementsStub,
 				}
 				messageStub := MessageStub{payload: func() []byte {

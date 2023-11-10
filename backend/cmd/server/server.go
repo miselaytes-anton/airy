@@ -1,9 +1,9 @@
-package server
+package main
 
 import (
 	"net/http"
 
-	models "github.com/miselaytes-anton/tatadata/backend/models"
+	models "github.com/miselaytes-anton/tatadata/backend/internal/models"
 )
 
 // ServerEnv represents the environment containing server dependencies.
@@ -22,7 +22,7 @@ type Server struct {
 
 // StartServer starts the http server.
 func (s Server) Routes() {
-	s.Router.HandleFunc("/api/graphs", s.graphsHandler())
-	s.Router.HandleFunc("/api/events", s.eventsHandler())
-	s.Router.HandleFunc("/api/measurements", s.measurementsHandler())
+	s.Router.HandleFunc("/api/graphs", s.handleGraphs())
+	s.Router.HandleFunc("/api/events", s.handleEvents())
+	s.Router.HandleFunc("/api/measurements", s.handleMeasurements())
 }

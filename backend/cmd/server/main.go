@@ -14,20 +14,12 @@ import (
 	// postgres driver
 	_ "github.com/lib/pq"
 
-	"github.com/miselaytes-anton/tatadata/backend/models"
-	"github.com/miselaytes-anton/tatadata/backend/server"
+	"github.com/miselaytes-anton/tatadata/backend/internal/config"
+	"github.com/miselaytes-anton/tatadata/backend/internal/models"
 )
 
-func getPostgresAddress() string {
-	value, ok := os.LookupEnv("POSTGRES_ADDRESS")
-	if !ok {
-		panic("POSTGRES_ADDRESS environment variable not set")
-	}
-	return value
-}
-
 func main() {
-	db, err := sql.Open("postgres", getPostgresAddress())
+	db, err := sql.Open("postgres", config.GetPostgresAddress())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,13 +34,13 @@ func main() {
 	events := models.EventModel{DB: db}
 
 	router := http.NewServeMux()
-	server := &server.Server{
+	server := &Server{
 		Router:       router,
 		Measurements: measurements,
 		Events:       events,
 	}
 	server.Routes()
-	log.Print("listening on http://localhost:8081")
+	log.Print("server is listening, view http://localhost:8081/api/graphs")
 	http.ListenAndServe(":8081", router)
 
 	sig := make(chan os.Signal, 1)

@@ -1,4 +1,4 @@
-package server
+package main
 
 import (
 	"encoding/json"
@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/miselaytes-anton/tatadata/backend/models"
+	"github.com/miselaytes-anton/tatadata/backend/internal/models"
 )
 
-func makeEventsQuery(r *http.Request) (models.EventsQuery, error) {
-	q := models.EventsQuery{}
+func makeMeasurementsQuery(r *http.Request) (models.MeasurementsQuery, error) {
+	q := models.MeasurementsQuery{}
 
 	fromStr := r.URL.Query().Get("from")
 	fromEpoch, err := strconv.ParseInt(fromStr, 10, 64)
@@ -24,46 +24,37 @@ func makeEventsQuery(r *http.Request) (models.EventsQuery, error) {
 		return q, fmt.Errorf("invalid to: %s, must be a unix timestamp in ms", toStr)
 	}
 
+	resolutionStr := r.URL.Query().Get("resolution")
+	resolution, err := strconv.ParseInt(resolutionStr, 10, 64)
+	if err != nil {
+		return q, fmt.Errorf("invalid resolution: %s, must be an integer", resolutionStr)
+	}
+
 	q.StartEpoch = fromEpoch
 	q.EndEpoch = toEpoch
+	q.Resolution = int(resolution)
+	q.SensorIDs = sensorIDs
 
 	return q, nil
 }
 
-// Handles a POST request to /events by inserting event into the database.
-// Also handles a GET request to /events by returning events between fromEpoch and toEpoch.
-func (s *Server) eventsHandler() http.HandlerFunc {
+func (s *Server) handleMeasurements() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "POST":
-			var event models.Event
-			err := json.NewDecoder(r.Body).Decode(&event)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-
-			_, err = s.Events.InsertEvent(event)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			w.WriteHeader(http.StatusCreated)
 		case "GET":
-			q, err := makeEventsQuery(r)
+			q, err := makeMeasurementsQuery(r)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
 
-			events, err := s.Events.GetEvents(q)
+			measurements, err := s.Measurements.GetMeasurements(q)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
-			err = json.NewEncoder(w).Encode(events)
+			err = json.NewEncoder(w).Encode(measurements)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return

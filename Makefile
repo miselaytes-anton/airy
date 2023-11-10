@@ -17,9 +17,9 @@ build: vet
 # Test and lint
 ###############
 test:
-	go test ./backend/processor
+	go test ./backend/cmd/processor
 test-c:
-	go test -v -cover -coverprofile=./build/c.out ./backend/processor
+	go test -v -cover -coverprofile=./build/c.out ./backend/cmd/processor
 	go tool cover -html=./build/c.out
 
 fmt:

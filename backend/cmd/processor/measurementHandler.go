@@ -1,10 +1,10 @@
-package processor
+package main
 
 import (
 	"fmt"
 	"time"
 
-	"github.com/miselaytes-anton/tatadata/backend/models"
+	"github.com/miselaytes-anton/tatadata/backend/internal/models"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )

@@ -1,4 +1,4 @@
-package server
+package main
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/miselaytes-anton/tatadata/backend/models"
+	"github.com/miselaytes-anton/tatadata/backend/internal/models"
 
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
@@ -187,7 +187,7 @@ func makeMeasurementsQueryFromGetGraphsRequest(r *http.Request) (models.Measurem
 
 }
 
-func (s *Server) graphsHandler() http.HandlerFunc {
+func (s *Server) handleGraphs() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params, err := makeMeasurementsQueryFromGetGraphsRequest(r)
 		if err != nil {

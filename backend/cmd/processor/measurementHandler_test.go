@@ -1,10 +1,10 @@
-package processor
+package main
 
 import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	models "github.com/miselaytes-anton/tatadata/backend/models"
+	models "github.com/miselaytes-anton/tatadata/backend/internal/models"
 )
 
 func Test_parseMeasurementMessage(t *testing.T) {
