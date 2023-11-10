@@ -10,7 +10,6 @@ import (
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/go-echarts/go-echarts/v2/types"
 
-	"github.com/miselaytes-anton/tatadata/backend/internal/log"
 	"github.com/miselaytes-anton/tatadata/backend/internal/models"
 )
 
@@ -196,7 +195,7 @@ func (s *Server) handleGraphs() http.HandlerFunc {
 			return
 		}
 
-		log.Info.Printf("Getting measurements for: %+v\n", params)
+		s.LogInfo.Printf("Getting measurements for: %+v\n", params)
 
 		measurements, err := s.Measurements.GetMeasurements(params)
 		if err != nil {

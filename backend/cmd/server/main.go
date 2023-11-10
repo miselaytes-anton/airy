@@ -37,6 +37,8 @@ func main() {
 		Router:       router,
 		Measurements: measurements,
 		Events:       events,
+		LogError:     log.Error,
+		LogInfo:      log.Info,
 	}
 	server.Routes()
 

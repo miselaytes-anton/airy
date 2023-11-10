@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	models "github.com/miselaytes-anton/tatadata/backend/internal/models"
@@ -18,6 +19,8 @@ type Server struct {
 		GetEvents(q models.EventsQuery) ([]models.Event, error)
 		InsertEvent(e models.Event) (bool, error)
 	}
+	LogError *log.Logger
+	LogInfo  *log.Logger
 }
 
 // StartServer starts the http server.

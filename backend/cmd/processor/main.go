@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,6 +12,7 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/miselaytes-anton/tatadata/backend/internal/config"
+	"github.com/miselaytes-anton/tatadata/backend/internal/log"
 	"github.com/miselaytes-anton/tatadata/backend/internal/models"
 )
 
@@ -26,13 +25,13 @@ const (
 func main() {
 	db, err := sql.Open("postgres", config.GetPostgresAddress())
 	if err != nil {
-		log.Fatal(err)
+		log.Error.Fatal(err)
 	}
 
 	err = db.Ping()
 
 	if err != nil {
-		log.Fatal(err)
+		log.Error.Fatal(err)
 	}
 
 	measurements := models.MeasurementModel{DB: db}
@@ -54,8 +53,10 @@ func main() {
 
 	mqttClient := MakeMqttClient(options)
 
-	p := MessageProcessor{
-		Client: mqttClient,
+	p := Processor{
+		Client:   mqttClient,
+		LogError: log.Error,
+		LogInfo:  log.Info,
 	}
 	p.EnableMqttLogging()
 	p.StartProcessing()
@@ -65,8 +66,8 @@ func main() {
 	signal.Notify(sig, syscall.SIGTERM)
 
 	<-sig
-	fmt.Println("signal caught - exiting")
+	log.Info.Println("signal caught - exiting")
 	db.Close()
 	p.StopProcessing()
-	fmt.Println("shutdown complete")
+	log.Info.Println("shutdown complete")
 }
