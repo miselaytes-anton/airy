@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,19 +13,20 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/miselaytes-anton/tatadata/backend/internal/config"
+	"github.com/miselaytes-anton/tatadata/backend/internal/log"
 	"github.com/miselaytes-anton/tatadata/backend/internal/models"
 )
 
 func main() {
 	db, err := sql.Open("postgres", config.GetPostgresAddress())
 	if err != nil {
-		log.Fatal(err)
+		log.Error.Fatal(err)
 	}
 
 	err = db.Ping()
 
 	if err != nil {
-		log.Fatal(err)
+		log.Error.Fatal(err)
 	}
 
 	measurements := models.MeasurementModel{DB: db}
@@ -40,15 +39,21 @@ func main() {
 		Events:       events,
 	}
 	server.Routes()
-	log.Print("server is listening, view http://localhost:8081/api/graphs")
-	http.ListenAndServe(":8081", router)
+
+	log.Info.Println("server is listening on :8081")
+	log.Info.Println("visit http://localhost:8081/api/graphs")
+
+	srv := &http.Server{
+		Addr: ":8081", ErrorLog: log.Error, Handler: router,
+	}
+	srv.ListenAndServe()
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
 	signal.Notify(sig, syscall.SIGTERM)
 
 	<-sig
-	fmt.Println("signal caught - exiting")
+	log.Info.Println("signal caught - exiting")
 	db.Close()
-	fmt.Println("shutdown complete")
+	log.Info.Println("shutdown complete")
 }

@@ -6,11 +6,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/miselaytes-anton/tatadata/backend/internal/models"
-
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/go-echarts/go-echarts/v2/types"
+
+	"github.com/miselaytes-anton/tatadata/backend/internal/log"
+	"github.com/miselaytes-anton/tatadata/backend/internal/models"
 )
 
 type valueGetter func(measurement models.Measurement) float64
@@ -195,7 +196,7 @@ func (s *Server) handleGraphs() http.HandlerFunc {
 			return
 		}
 
-		fmt.Printf("Getting measurements for: %+v\n", params)
+		log.Info.Printf("Getting measurements for: %+v\n", params)
 
 		measurements, err := s.Measurements.GetMeasurements(params)
 		if err != nil {
