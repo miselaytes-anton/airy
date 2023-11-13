@@ -9,6 +9,7 @@ import (
 	// imports postgres timezones data
 	_ "time/tzdata"
 	// postgres driver
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	_ "github.com/lib/pq"
 
 	"github.com/miselaytes-anton/tatadata/backend/internal/config"
@@ -16,19 +17,38 @@ import (
 	"github.com/miselaytes-anton/tatadata/backend/internal/models"
 )
 
-const (
-	mqttClientID     = "tatadata"
-	measurementTopic = "measurement"
-	measurementQOS   = 1
-)
+func enableMqttLogging() {
+	mqtt.ERROR = log.Error
+	mqtt.CRITICAL = log.Critical
+	mqtt.WARN = log.Warning
+	// mqtt.DEBUG = log.Debug
+}
 
-func main() {
+func connectToDb() (*sql.DB, error) {
 	db, err := sql.Open("postgres", config.GetPostgresAddress())
 	if err != nil {
-		log.Error.Fatal(err)
+		return nil, err
 	}
 
 	err = db.Ping()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return db, err
+}
+
+func main() {
+	const (
+		mqttClientID                = "tatadata"
+		measurementTopic            = "measurement"
+		measurementQOS              = 1
+		waithBeforeMqttDisconnectMs = 1000
+	)
+	enableMqttLogging()
+
+	db, err := connectToDb()
 
 	if err != nil {
 		log.Error.Fatal(err)
@@ -36,30 +56,30 @@ func main() {
 
 	measurements := models.MeasurementModel{DB: db}
 
-	handler := MeasurementHandler{
+	handler := measurementHandler{
 		Measurements: measurements,
+		LogError:     log.Error,
+		LogInfo:      log.Info,
 	}
 
-	options := MqttClientOpts{
+	options := mqttClientOpts{
 		BrokerAddress: config.GetBrokerAdress(),
 		ClientID:      mqttClientID,
-		MessageHandlers: MessageHandlers{
+		MessageHandlers: messageHandlers{
 			measurementTopic: {
-				Handler: handler.OnMessageHandler,
+				Handler: handler.handle,
 				QOS:     measurementQOS,
 			},
 		},
+		LogError: log.Error,
+		LogInfo:  log.Info,
 	}
 
 	mqttClient := NewMqttClient(options)
 
-	p := Processor{
-		Client:   mqttClient,
-		LogError: log.Error,
-		LogInfo:  log.Info,
+	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
+		log.Error.Fatal(token.Error())
 	}
-	p.EnableMqttLogging()
-	p.StartProcessing()
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
@@ -68,6 +88,6 @@ func main() {
 	<-sig
 	log.Info.Println("signal caught - exiting")
 	db.Close()
-	p.StopProcessing()
+	mqttClient.Disconnect(waithBeforeMqttDisconnectMs)
 	log.Info.Println("shutdown complete")
 }

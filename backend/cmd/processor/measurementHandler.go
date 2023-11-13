@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/miselaytes-anton/tatadata/backend/internal/models"
@@ -9,11 +10,12 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-// MeasurementHandler struct defines the handlers for measurment message.
-type MeasurementHandler struct {
+type measurementHandler struct {
 	Measurements interface {
 		InsertMeasurement(mq models.Measurement) (bool, error)
 	}
+	LogError *log.Logger
+	LogInfo  *log.Logger
 }
 
 // parseMeasurementMessage parses a measurement message which comes in the form of "bedroom 51.86 607.44 0.52 100853 27.25 60.22"
@@ -26,22 +28,21 @@ func parseMeasurementMessage(msg string) (models.Measurement, error) {
 	return m, nil
 }
 
-// OnMessageHandler is called when a message is received
-func (h MeasurementHandler) OnMessageHandler(_ mqtt.Client, msg mqtt.Message) {
+func (h measurementHandler) handle(_ mqtt.Client, msg mqtt.Message) {
 	payload := string(msg.Payload())
-	fmt.Printf("Received message: %s\n", payload)
+	h.LogInfo.Printf("Received message: %s\n", payload)
 	m, err := parseMeasurementMessage(payload)
 	if err != nil {
-		fmt.Printf("Message could not be parsed (%s): %s", payload, err)
+		h.LogError.Printf("Message could not be parsed (%s): %s", payload, err)
 		return
 	}
 
 	m.Timestamp = time.Now().Unix()
 
-	fmt.Printf("Inserting measurement: %+v\n", m)
+	h.LogInfo.Printf("Inserting measurement: %+v\n", m)
 
 	_, err = h.Measurements.InsertMeasurement(m)
 	if err != nil {
-		fmt.Printf("Measurement could not be inserted into database: %s", err)
+		h.LogError.Printf("Measurement could not be inserted into database: %s", err)
 	}
 }

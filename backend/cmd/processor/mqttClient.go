@@ -1,27 +1,27 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-// MessageHandlers defines topics to which MQTT shoudl subscribe and corresponding handlers.
-type MessageHandlers map[string]struct {
+type messageHandlers map[string]struct {
 	Handler func(mqtt.Client, mqtt.Message)
 	QOS     byte
 }
 
-// MqttClientOpts defines the options for creating a mqtt client.
-type MqttClientOpts struct {
+type mqttClientOpts struct {
 	BrokerAddress   string
 	ClientID        string
-	MessageHandlers MessageHandlers
+	MessageHandlers messageHandlers
+	LogError        *log.Logger
+	LogInfo         *log.Logger
 }
 
-// MakeMqttClient creates mqtt client.
-func NewMqttClient(o MqttClientOpts) mqtt.Client {
+// NewMqttClient creates mqtt client.
+func NewMqttClient(o mqttClientOpts) mqtt.Client {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(o.BrokerAddress)
 	opts.SetClientID(o.ClientID)
@@ -40,13 +40,13 @@ func NewMqttClient(o MqttClientOpts) mqtt.Client {
 	// have not subscribed to here (if they were previously subscribed to they are part of the session and survive
 	// disconnect/reconnect). Adding a DefaultPublishHandler lets us detect this.
 	opts.DefaultPublishHandler = func(_ mqtt.Client, msg mqtt.Message) {
-		fmt.Printf("Unexpected message: %s\n", msg)
+		o.LogInfo.Printf("Unexpected message: %s\n", msg)
 	}
 	opts.OnConnectionLost = func(_ mqtt.Client, err error) {
-		fmt.Printf("Connection lost: %s\n", err)
+		o.LogInfo.Printf("Connection lost: %s\n", err)
 	}
 	opts.OnConnect = func(c mqtt.Client) {
-		fmt.Println("Connection established")
+		o.LogInfo.Println("Connection established")
 
 		// Subscribe to the topic(s)
 		for topic, handlerOpts := range o.MessageHandlers {
@@ -56,15 +56,15 @@ func NewMqttClient(o MqttClientOpts) mqtt.Client {
 			go func() {
 				_ = t.Wait() // Can also use '<-t.Done()' in releases > 1.2.0
 				if t.Error() != nil {
-					fmt.Printf("Error subscribing: %s\n", t.Error())
+					o.LogError.Printf("Error subscribing: %s\n", t.Error())
 				} else {
-					fmt.Println("Subscribed to: ", topic)
+					o.LogInfo.Println("Subscribed to: ", topic)
 				}
 			}()
 		}
 	}
 	opts.OnReconnecting = func(_ mqtt.Client, _ *mqtt.ClientOptions) {
-		fmt.Println("Attempting to reconnect")
+		o.LogInfo.Println("Attempting to reconnect")
 	}
 
 	// Connect to the broker
