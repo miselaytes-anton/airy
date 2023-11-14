@@ -6,6 +6,11 @@ import (
 	"github.com/lib/pq"
 )
 
+type MeasurementModelInterface interface {
+	GetMeasurements(MeasurementsQuery) ([]Measurement, error)
+	InsertMeasurement(Measurement) (bool, error)
+}
+
 // Measurement represents a single measurement.
 type Measurement struct {
 	Timestamp   int64   `json:"timestamp"`

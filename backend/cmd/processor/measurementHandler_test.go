@@ -23,6 +23,10 @@ func (m *measurementsStub) InsertMeasurement(measurement models.Measurement) (bo
 	return m.insertMeasurement(measurement, &m.measurements)
 }
 
+func (m *measurementsStub) GetMeasurements(mq models.MeasurementsQuery) ([]models.Measurement, error) {
+	return nil, nil
+}
+
 func insertMeasurementOk(m models.Measurement, measurements *[]models.Measurement) (bool, error) {
 	*measurements = append(*measurements, m)
 	return true, nil

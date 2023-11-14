@@ -4,6 +4,11 @@ import (
 	"database/sql"
 )
 
+type EventModelInterface interface {
+	GetEvents(q EventsQuery) ([]Event, error)
+	InsertEvent(e Event) (bool, error)
+}
+
 // EventModel represents an event model.
 type EventModel struct {
 	DB *sql.DB

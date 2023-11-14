@@ -11,11 +11,9 @@ import (
 )
 
 type measurementHandler struct {
-	Measurements interface {
-		InsertMeasurement(mq models.Measurement) (bool, error)
-	}
-	LogError *log.Logger
-	LogInfo  *log.Logger
+	Measurements models.MeasurementModelInterface
+	LogError     *log.Logger
+	LogInfo      *log.Logger
 }
 
 // parseMeasurementMessage parses a measurement message which comes in the form of "bedroom 51.86 607.44 0.52 100853 27.25 60.22"

@@ -14,15 +14,10 @@ type Server struct {
 	Router interface {
 		HandlerFunc(string, string, http.HandlerFunc)
 	}
-	Measurements interface {
-		GetMeasurements(mq models.MeasurementsQuery) ([]models.Measurement, error)
-	}
-	Events interface {
-		GetEvents(q models.EventsQuery) ([]models.Event, error)
-		InsertEvent(e models.Event) (bool, error)
-	}
-	LogError *log.Logger
-	LogInfo  *log.Logger
+	Measurements models.MeasurementModelInterface
+	Events       models.EventModelInterface
+	LogError     *log.Logger
+	LogInfo      *log.Logger
 }
 
 // StartServer starts the http server.
