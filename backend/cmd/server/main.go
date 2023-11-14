@@ -10,6 +10,7 @@ import (
 	// imports postgres timezones data
 	_ "time/tzdata"
 	// postgres driver
+	"github.com/julienschmidt/httprouter"
 	_ "github.com/lib/pq"
 
 	"github.com/miselaytes-anton/tatadata/backend/internal/config"
@@ -32,7 +33,7 @@ func main() {
 	measurements := models.MeasurementModel{DB: db}
 	events := models.EventModel{DB: db}
 
-	router := http.NewServeMux()
+	router := httprouter.New()
 	server := &Server{
 		Router:       router,
 		Measurements: measurements,

@@ -30,48 +30,43 @@ func makeEventsQuery(r *http.Request) (models.EventsQuery, error) {
 	return q, nil
 }
 
-// Handles a POST request to /events by inserting event into the database.
-// Also handles a GET request to /events by returning events between fromEpoch and toEpoch.
-func (s *Server) handleEvents() http.HandlerFunc {
+func (s *Server) handleEventsList() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case "POST":
-			var event models.Event
-			err := json.NewDecoder(r.Body).Decode(&event)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-
-			_, err = s.Events.InsertEvent(event)
-			if err != nil {
-				s.serverError(w, err)
-				return
-			}
-
-			w.WriteHeader(http.StatusCreated)
-		case "GET":
-			q, err := makeEventsQuery(r)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-
-			events, err := s.Events.GetEvents(q)
-			if err != nil {
-				s.serverError(w, err)
-				return
-			}
-
-			err = json.NewEncoder(w).Encode(events)
-			if err != nil {
-				s.serverError(w, err)
-				return
-			}
-
-		default:
-			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		q, err := makeEventsQuery(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 
+		events, err := s.Events.GetEvents(q)
+		if err != nil {
+			s.serverError(w, err)
+			return
+		}
+
+		err = json.NewEncoder(w).Encode(events)
+		if err != nil {
+			s.serverError(w, err)
+			return
+		}
+	}
+}
+
+func (s *Server) handleEventsCreate() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var event models.Event
+		err := json.NewDecoder(r.Body).Decode(&event)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		_, err = s.Events.InsertEvent(event)
+		if err != nil {
+			s.serverError(w, err)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
 	}
 }

@@ -6,6 +6,8 @@ require github.com/eclipse/paho.mqtt.golang v1.4.3
 
 require github.com/lib/pq v1.10.9
 
+require github.com/julienschmidt/httprouter v1.3.0 // indirect
+
 require (
 	github.com/go-echarts/go-echarts/v2 v2.2.7 // indirect
 	github.com/google/go-cmp v0.6.0
