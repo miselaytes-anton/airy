@@ -45,7 +45,7 @@ func (s *Server) handleEvents() http.HandlerFunc {
 
 			_, err = s.Events.InsertEvent(event)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				s.serverError(w, err)
 				return
 			}
 
@@ -59,18 +59,18 @@ func (s *Server) handleEvents() http.HandlerFunc {
 
 			events, err := s.Events.GetEvents(q)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				s.serverError(w, err)
 				return
 			}
 
 			err = json.NewEncoder(w).Encode(events)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				s.serverError(w, err)
 				return
 			}
 
 		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		}
 
 	}

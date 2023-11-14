@@ -191,7 +191,7 @@ func (s *Server) handleGraphs() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params, err := makeMeasurementsQueryFromGetGraphsRequest(r)
 		if err != nil {
-			fmt.Fprintf(w, "error parsing measurement params: %s", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -199,14 +199,14 @@ func (s *Server) handleGraphs() http.HandlerFunc {
 
 		measurements, err := s.Measurements.GetMeasurements(params)
 		if err != nil {
-			fmt.Fprintf(w, "error getting measurements: %s", err)
+			s.serverError(w, err)
 			return
 		}
 
 		events, err := s.Events.GetEvents(models.EventsQuery{StartEpoch: params.StartEpoch, EndEpoch: params.EndEpoch})
 
 		if err != nil {
-			fmt.Fprintf(w, "error parsing event params: %s", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
