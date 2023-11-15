@@ -195,7 +195,7 @@ func (s *Server) handleGraphs() http.HandlerFunc {
 			return
 		}
 
-		s.LogInfo.Printf("Getting measurements for: %+v\n", params)
+		s.LogInfo.Printf("getting measurements for: %+v\n", params)
 
 		measurements, err := s.Measurements.GetMeasurements(params)
 		if err != nil {

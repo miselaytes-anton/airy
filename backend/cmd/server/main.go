@@ -41,7 +41,7 @@ func main() {
 		LogError:     log.Error,
 		LogInfo:      log.Info,
 	}
-	server.Routes()
+	server.routes()
 
 	log.Info.Println("server is listening on :8081")
 	log.Info.Println("visit http://localhost:8081/api/graphs")

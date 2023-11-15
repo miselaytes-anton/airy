@@ -40,29 +40,22 @@ func makeMeasurementsQuery(r *http.Request) (models.MeasurementsQuery, error) {
 
 func (s *Server) handleMeasurements() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case "GET":
-			q, err := makeMeasurementsQuery(r)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-
-			measurements, err := s.Measurements.GetMeasurements(q)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			err = json.NewEncoder(w).Encode(measurements)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		q, err := makeMeasurementsQuery(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 
+		measurements, err := s.Measurements.GetMeasurements(q)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = json.NewEncoder(w).Encode(measurements)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 }

@@ -21,7 +21,7 @@ type Server struct {
 }
 
 // StartServer starts the http server.
-func (s Server) Routes() {
+func (s Server) routes() {
 	s.Router.HandlerFunc(http.MethodGet, "/api/graphs", s.handleGraphs())
 	s.Router.HandlerFunc(http.MethodGet, "/api/events", s.handleEventsList())
 	s.Router.HandlerFunc(http.MethodPost, "/api/events", s.handleEventsCreate())

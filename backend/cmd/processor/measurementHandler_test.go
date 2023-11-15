@@ -2,37 +2,28 @@ package main
 
 import (
 	"errors"
+	"io"
+	"log"
 	"testing"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
-	"github.com/miselaytes-anton/tatadata/backend/internal/log"
 	"github.com/miselaytes-anton/tatadata/backend/internal/models"
+	"github.com/miselaytes-anton/tatadata/backend/internal/models/mocks"
 )
 
-type insertMeasurement = func(m models.Measurement, measurements *[]models.Measurement) (bool, error)
-
-type measurementsStub struct {
-	measurements []models.Measurement
-	insertMeasurement
+func getMeasurementsOkMock(mq models.MeasurementsQuery, measurements *[]models.Measurement) ([]models.Measurement, error) {
+	return *measurements, nil
 }
 
-func (m *measurementsStub) InsertMeasurement(measurement models.Measurement) (bool, error) {
-	return m.insertMeasurement(measurement, &m.measurements)
-}
-
-func (m *measurementsStub) GetMeasurements(mq models.MeasurementsQuery) ([]models.Measurement, error) {
-	return nil, nil
-}
-
-func insertMeasurementOk(m models.Measurement, measurements *[]models.Measurement) (bool, error) {
+func insertMeasurementOkMock(m models.Measurement, measurements *[]models.Measurement) (bool, error) {
 	*measurements = append(*measurements, m)
 	return true, nil
 }
 
-func insertMeasurementError(m models.Measurement, measurements *[]models.Measurement) (bool, error) {
+func insertMeasurementErrorMock(m models.Measurement, measurements *[]models.Measurement) (bool, error) {
 	return false, errors.New("database error")
 }
 
@@ -106,8 +97,8 @@ func Test_parseMeasurementMessage(t *testing.T) {
 					errMsg = err.Error()
 				}
 
-				if errMsg != d.errMsg {
-					t.Errorf("Expected error message `%s`, got `%s`", d.errMsg, errMsg)
+				if diff := cmp.Diff(d.errMsg, errMsg); diff != "" {
+					t.Error(diff)
 				}
 			},
 		)
@@ -117,10 +108,10 @@ func Test_parseMeasurementMessage(t *testing.T) {
 
 func Test_handle(t *testing.T) {
 	data := []struct {
-		name     string
-		message  string
-		expected []models.Measurement
-		insertMeasurement
+		name                  string
+		message               string
+		expected              []models.Measurement
+		insertMeasurementMock mocks.InsertMeasurementMock
 	}{
 		{
 			"valid message",
@@ -134,25 +125,25 @@ func Test_handle(t *testing.T) {
 				Temperature: 27.25,
 				Humidity:    60.22,
 			}},
-			insertMeasurementOk,
+			insertMeasurementOkMock,
 		},
 		{
 			"empty message",
 			"",
 			make([]models.Measurement, 0),
-			insertMeasurementOk,
+			insertMeasurementOkMock,
 		},
 		{
 			"invalid message",
 			"bedroom something",
 			make([]models.Measurement, 0),
-			insertMeasurementOk,
+			insertMeasurementOkMock,
 		},
 		{
 			"valid message, database error",
 			"bedroom 51.86 607.44 0.52 100853 27.25 60.22",
 			make([]models.Measurement, 0),
-			insertMeasurementError,
+			insertMeasurementErrorMock,
 		},
 	}
 
@@ -160,14 +151,15 @@ func Test_handle(t *testing.T) {
 		t.Run(
 			d.name,
 			func(t *testing.T) {
-				measurementsStub := measurementsStub{
-					measurements:      make([]models.Measurement, 0),
-					insertMeasurement: d.insertMeasurement,
+				measurementsMock := mocks.MeasurementModelMock{
+					Measurements:          make([]models.Measurement, 0),
+					InsertMeasurementMock: d.insertMeasurementMock,
+					GetMeasurementsMock:   getMeasurementsOkMock,
 				}
 				handler := measurementHandler{
-					Measurements: &measurementsStub,
-					LogError:     log.Error,
-					LogInfo:      log.Info,
+					Measurements: &measurementsMock,
+					LogError:     log.New(io.Discard, "", 0),
+					LogInfo:      log.New(io.Discard, "", 0),
 				}
 				messageStub := messageStub{payload: func() []byte {
 					return []byte(d.message)
@@ -175,7 +167,7 @@ func Test_handle(t *testing.T) {
 
 				handler.handle(mqttClientStub{}, messageStub)
 
-				if diff := cmp.Diff(d.expected, measurementsStub.measurements, cmpopts.IgnoreFields(models.Measurement{}, "Timestamp")); diff != "" {
+				if diff := cmp.Diff(d.expected, measurementsMock.Measurements, cmpopts.IgnoreFields(models.Measurement{}, "Timestamp")); diff != "" {
 					t.Error(diff)
 				}
 

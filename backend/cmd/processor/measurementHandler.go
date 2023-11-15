@@ -28,19 +28,19 @@ func parseMeasurementMessage(msg string) (models.Measurement, error) {
 
 func (h measurementHandler) handle(_ mqtt.Client, msg mqtt.Message) {
 	payload := string(msg.Payload())
-	h.LogInfo.Printf("Received message: %s\n", payload)
+	h.LogInfo.Printf("received message: %s\n", payload)
 	m, err := parseMeasurementMessage(payload)
 	if err != nil {
-		h.LogError.Printf("Message could not be parsed (%s): %s", payload, err)
+		h.LogError.Printf("message could not be parsed (%s): %s", payload, err)
 		return
 	}
 
 	m.Timestamp = time.Now().Unix()
 
-	h.LogInfo.Printf("Inserting measurement: %+v\n", m)
+	h.LogInfo.Printf("inserting measurement: %+v\n", m)
 
 	_, err = h.Measurements.InsertMeasurement(m)
 	if err != nil {
-		h.LogError.Printf("Measurement could not be inserted into database: %s", err)
+		h.LogError.Printf("measurement could not be inserted into database: %s", err)
 	}
 }
