@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,6 +22,11 @@ type Server struct {
 	LogInfo      *log.Logger
 }
 
+type ResponseError struct {
+	Status string `json:"status"`
+	Error  string `json:"error"`
+}
+
 // StartServer starts the http server.
 func (s Server) routes() {
 	s.Router.HandlerFunc(http.MethodGet, "/api/graphs", s.handleGraphs())
@@ -28,8 +35,22 @@ func (s Server) routes() {
 	s.Router.HandlerFunc(http.MethodGet, "/api/measurements", s.handleMeasurements())
 }
 
-func (s Server) serverError(w http.ResponseWriter, err error) {
+func (s Server) jsonError(w http.ResponseWriter, err error, code int) {
+	responseError := ResponseError{
+		Status: http.StatusText(code),
+		Error:  err.Error(),
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(code)
+
+	json.NewEncoder(w).Encode(responseError)
+}
+
+func (s Server) jsonServerError(w http.ResponseWriter, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
 	s.LogError.Output(2, trace)
-	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+
+	s.jsonError(w, errors.New("internal server error occured"), http.StatusInternalServerError)
 }

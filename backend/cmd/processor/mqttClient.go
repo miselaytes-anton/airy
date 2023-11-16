@@ -53,14 +53,14 @@ func NewMqttClient(o mqttClientOpts) mqtt.Client {
 			t := c.Subscribe(topic, handlerOpts.QOS, handlerOpts.Handler)
 			// the connection handler is called in a goroutine so blocking here would hot cause an issue. However as blocking
 			// in other handlers does cause problems its best to just assume we should not block
-			go func() {
+			go func(topic string) {
 				_ = t.Wait() // Can also use '<-t.Done()' in releases > 1.2.0
 				if t.Error() != nil {
 					o.LogError.Printf("Error subscribing: %s\n", t.Error())
 				} else {
 					o.LogInfo.Println("Subscribed to: ", topic)
 				}
-			}()
+			}(topic)
 		}
 	}
 	opts.OnReconnecting = func(_ mqtt.Client, _ *mqtt.ClientOptions) {

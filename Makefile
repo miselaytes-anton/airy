@@ -17,9 +17,9 @@ build: vet
 # Test and lint
 ###############
 test:
-	go test -v ./backend/cmd/processor
+	go test -v ./backend/cmd/processor ./backend/cmd/server
 test-c:
-	go test -v -cover -coverprofile=./build/c.out ./backend/cmd/processor
+	go test -v -cover -coverprofile=./build/c.out ./backend/cmd/processor ./backend/cmd/server
 	go tool cover -html=./build/c.out
 
 fmt:
@@ -28,8 +28,8 @@ fmt:
 .PHONY:fmt
 
 vet: fmt
-	go vet ./backend/cmd/server/main.go 
-	go vet ./backend/cmd/processor/main.go
+	go vet ./backend/cmd/server/
+	go vet ./backend/cmd/processor/
 .PHONY:vet
 
 #########

@@ -2,9 +2,9 @@ package mocks
 
 import "github.com/miselaytes-anton/tatadata/backend/internal/models"
 
-type InsertEventMock = func(m models.Event, measurements *[]models.Event) (bool, error)
+type InsertEventMock = func(models.Event, *[]models.Event) (bool, error)
 
-type GetEventsMock = func(mq models.EventsQuery, measurements *[]models.Event) ([]models.Event, error)
+type GetEventsMock = func(models.EventsQuery, *[]models.Event) ([]models.Event, error)
 
 type EventModelMock struct {
 	Events []models.Event
@@ -12,8 +12,8 @@ type EventModelMock struct {
 	GetEventsMock
 }
 
-func (m *EventModelMock) InsertEvent(measurement models.Event) (bool, error) {
-	return m.InsertEventMock(measurement, &m.Events)
+func (m *EventModelMock) InsertEvent(event models.Event) (bool, error) {
+	return m.InsertEventMock(event, &m.Events)
 }
 
 func (m *EventModelMock) GetEvents(mq models.EventsQuery) ([]models.Event, error) {

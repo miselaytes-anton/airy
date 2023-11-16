@@ -2,9 +2,9 @@ package mocks
 
 import "github.com/miselaytes-anton/tatadata/backend/internal/models"
 
-type InsertMeasurementMock = func(m models.Measurement, measurements *[]models.Measurement) (bool, error)
+type InsertMeasurementMock = func(models.Measurement, *[]models.Measurement) (bool, error)
 
-type GetMeasurementsMock = func(mq models.MeasurementsQuery, measurements *[]models.Measurement) ([]models.Measurement, error)
+type GetMeasurementsMock = func(models.MeasurementsQuery, *[]models.Measurement) ([]models.Measurement, error)
 
 type MeasurementModelMock struct {
 	Measurements []models.Measurement

@@ -199,7 +199,7 @@ func (s *Server) handleGraphs() http.HandlerFunc {
 
 		measurements, err := s.Measurements.GetMeasurements(params)
 		if err != nil {
-			s.serverError(w, err)
+			s.jsonServerError(w, err)
 			return
 		}
 

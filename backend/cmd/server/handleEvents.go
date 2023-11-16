@@ -34,19 +34,19 @@ func (s *Server) handleEventsList() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		q, err := makeEventsQuery(r)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			s.jsonError(w, err, http.StatusBadRequest)
 			return
 		}
 
 		events, err := s.Events.GetEvents(q)
 		if err != nil {
-			s.serverError(w, err)
+			s.jsonServerError(w, err)
 			return
 		}
 
 		err = json.NewEncoder(w).Encode(events)
 		if err != nil {
-			s.serverError(w, err)
+			s.jsonServerError(w, err)
 			return
 		}
 	}
@@ -63,7 +63,7 @@ func (s *Server) handleEventsCreate() http.HandlerFunc {
 
 		_, err = s.Events.InsertEvent(event)
 		if err != nil {
-			s.serverError(w, err)
+			s.jsonServerError(w, err)
 			return
 		}
 
