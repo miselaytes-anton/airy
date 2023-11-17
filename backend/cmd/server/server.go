@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -36,9 +35,21 @@ func (s Server) routes() {
 }
 
 func (s Server) jsonError(w http.ResponseWriter, err error, code int) {
-	responseError := ResponseError{
-		Status: http.StatusText(code),
-		Error:  err.Error(),
+	var responseError ResponseError
+
+	if code == http.StatusInternalServerError {
+		trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
+		s.LogError.Output(2, trace)
+
+		responseError = ResponseError{
+			Status: http.StatusText(code),
+			Error:  "internal server error occured",
+		}
+	} else {
+		responseError = ResponseError{
+			Status: http.StatusText(code),
+			Error:  err.Error(),
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -46,11 +57,4 @@ func (s Server) jsonError(w http.ResponseWriter, err error, code int) {
 	w.WriteHeader(code)
 
 	json.NewEncoder(w).Encode(responseError)
-}
-
-func (s Server) jsonServerError(w http.ResponseWriter, err error) {
-	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
-	s.LogError.Output(2, trace)
-
-	s.jsonError(w, errors.New("internal server error occured"), http.StatusInternalServerError)
 }

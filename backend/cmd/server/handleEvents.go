@@ -41,13 +41,13 @@ func (s *Server) handleEventsList() http.HandlerFunc {
 
 		events, err := s.Events.GetEvents(q)
 		if err != nil {
-			s.jsonServerError(w, err)
+			s.jsonError(w, err, http.StatusInternalServerError)
 			return
 		}
 
 		err = json.NewEncoder(w).Encode(events)
 		if err != nil {
-			s.jsonServerError(w, err)
+			s.jsonError(w, err, http.StatusInternalServerError)
 			return
 		}
 	}
@@ -65,7 +65,7 @@ func (s *Server) handleEventsCreate() http.HandlerFunc {
 
 		_, err = s.Events.InsertEvent(event)
 		if err != nil {
-			s.jsonServerError(w, err)
+			s.jsonError(w, err, http.StatusInternalServerError)
 			return
 		}
 
