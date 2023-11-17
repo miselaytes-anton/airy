@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -57,7 +58,8 @@ func (s *Server) handleEventsCreate() http.HandlerFunc {
 		var event models.Event
 		err := json.NewDecoder(r.Body).Decode(&event)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			err := errors.New("invalid event format, expected timestamp in ms, locationId and eventType")
+			s.jsonError(w, err, http.StatusBadRequest)
 			return
 		}
 
