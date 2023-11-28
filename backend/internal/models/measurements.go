@@ -61,7 +61,7 @@ func (m MeasurementModel) InsertMeasurement(measurement Measurement) (string, er
 // GetMeasurements returns measurements aggregated by resolution (ms) between fromEpoch and toEpoch.
 func (m MeasurementModel) GetMeasurements(mq MeasurementsQuery) ([]Measurement, error) {
 	query := `
-	select id,
+	select
 	(floor("timestamp"/$1)*$1)::numeric::integer as timestamp, 
 	sensor_id, 
 	avg(iaq) as iaq, 
@@ -88,7 +88,7 @@ func (m MeasurementModel) GetMeasurements(mq MeasurementsQuery) ([]Measurement, 
 
 	for rows.Next() {
 		var measurement Measurement
-		err := rows.Scan(&measurement.ID, &measurement.Timestamp, &measurement.SensorID, &measurement.IAQ, &measurement.Humidity, &measurement.Temperature, &measurement.Pressure, &measurement.CO2, &measurement.VOC)
+		err := rows.Scan(&measurement.Timestamp, &measurement.SensorID, &measurement.IAQ, &measurement.Humidity, &measurement.Temperature, &measurement.Pressure, &measurement.CO2, &measurement.VOC)
 		if err != nil {
 			return nil, err
 		}

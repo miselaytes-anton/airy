@@ -1,12 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 
+	"github.com/julienschmidt/httprouter"
 	"github.com/miselaytes-anton/tatadata/backend/internal/models"
 )
 
@@ -75,6 +77,42 @@ func (s *Server) handleEventsCreate() http.HandlerFunc {
 		}
 
 		err = json.NewEncoder(w).Encode(response{ID: id})
+
+		if err != nil {
+			s.jsonError(w, err, http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func (s *Server) handleEventsUpdate() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var event models.Event
+		err := json.NewDecoder(r.Body).Decode(&event)
+		if err != nil || event.EndTimestamp <= 0 {
+			err := errors.New("invalid event format, expected endTimestamp in ms")
+			s.jsonError(w, err, http.StatusBadRequest)
+			return
+		}
+
+		params := httprouter.ParamsFromContext(r.Context())
+
+		id := params.ByName("id")
+
+		event, err = s.Events.UpdateEvent(id, event.EndTimestamp)
+
+		if err == sql.ErrNoRows {
+			err = errors.New("event not found")
+			s.jsonError(w, err, http.StatusNotFound)
+			return
+		}
+
+		if err != nil {
+			s.jsonError(w, err, http.StatusInternalServerError)
+			return
+		}
+
+		err = json.NewEncoder(w).Encode(event)
 
 		if err != nil {
 			s.jsonError(w, err, http.StatusInternalServerError)

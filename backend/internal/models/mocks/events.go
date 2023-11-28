@@ -7,17 +7,22 @@ import (
 )
 
 type InsertEventMock = func(models.Event, *[]models.Event) (string, error)
-
 type GetEventsMock = func(models.EventsQuery, *[]models.Event) ([]models.Event, error)
+type UpdateEventMock = func(string, int64, *[]models.Event) (models.Event, error)
 
 type EventModelMock struct {
 	Events []models.Event
 	InsertEventMock
 	GetEventsMock
+	UpdateEventMock
 }
 
 func (m *EventModelMock) InsertEvent(event models.Event) (string, error) {
 	return m.InsertEventMock(event, &m.Events)
+}
+
+func (m *EventModelMock) UpdateEvent(id string, endTimestamp int64) (models.Event, error) {
+	return m.UpdateEventMock(id, endTimestamp, &m.Events)
 }
 
 func (m *EventModelMock) GetEvents(mq models.EventsQuery) ([]models.Event, error) {
