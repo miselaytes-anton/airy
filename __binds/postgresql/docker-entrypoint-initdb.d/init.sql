@@ -16,3 +16,15 @@ CREATE TABLE events (
     type VARCHAR (255) NOT NULL,
     PRIMARY KEY (location_id, timestamp, type)
 );
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+ALTER TABLE events DROP CONSTRAINT events_pkey;
+ALTER TABLE events ADD id uuid DEFAULT uuid_generate_v4 ();
+ALTER TABLE events ADD PRIMARY KEY (id);
+ALTER TABLE events ADD UNIQUE (location_id, timestamp, type);
+
+ALTER TABLE measurements DROP CONSTRAINT measurements_pkey;
+ALTER TABLE measurements ADD id uuid DEFAULT uuid_generate_v4 ();
+ALTER TABLE measurements ADD PRIMARY KEY (id);
+ALTER TABLE measurements ADD UNIQUE (sensor_id, timestamp);

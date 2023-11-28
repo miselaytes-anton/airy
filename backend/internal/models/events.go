@@ -6,7 +6,7 @@ import (
 
 type EventModelInterface interface {
 	GetEvents(q EventsQuery) ([]Event, error)
-	InsertEvent(e Event) (bool, error)
+	InsertEvent(e Event) (string, error)
 }
 
 // EventModel represents an event model.
@@ -21,6 +21,7 @@ type EventsQuery struct {
 
 // Event represents a single event.
 type Event struct {
+	ID         string `json:"id"`
 	Timestamp  int64  `json:"timestamp"`
 	LocationID string `json:"locationId"`
 	EventType  string `json:"eventType"`
@@ -29,7 +30,7 @@ type Event struct {
 // GetEvents returns events between fromEpoch and toEpoch.
 func (m EventModel) GetEvents(q EventsQuery) ([]Event, error) {
 	query := `
-	select timestamp, location_id, type from "events"
+	select id, timestamp, location_id, type from "events"
 	where "timestamp" >= $1 and "timestamp" <= $2
 	order by timestamp asc
 	`
@@ -46,7 +47,7 @@ func (m EventModel) GetEvents(q EventsQuery) ([]Event, error) {
 
 	for rows.Next() {
 		var event Event
-		err := rows.Scan(&event.Timestamp, &event.LocationID, &event.EventType)
+		err := rows.Scan(&event.ID, &event.Timestamp, &event.LocationID, &event.EventType)
 		if err != nil {
 			return nil, err
 		}
@@ -57,13 +58,13 @@ func (m EventModel) GetEvents(q EventsQuery) ([]Event, error) {
 }
 
 // InsertEvent inserts a new event into the database.
-func (m EventModel) InsertEvent(e Event) (bool, error) {
-	query := `insert into "events"("timestamp", "location_id", "type") values($1, $2, $3)`
-	_, err := m.DB.Exec(query, e.Timestamp, e.LocationID, e.EventType)
+func (m EventModel) InsertEvent(e Event) (string, error) {
+	query := `insert into "events"("timestamp", "location_id", "type") values($1, $2, $3) RETURNING id`
+	err := m.DB.QueryRow(query, e.Timestamp, e.LocationID, e.EventType).Scan(&e)
 
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
-	return true, nil
+	return e.ID, nil
 }

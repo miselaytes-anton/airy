@@ -18,13 +18,13 @@ func getMeasurementsOkMock(mq models.MeasurementsQuery, measurements *[]models.M
 	return *measurements, nil
 }
 
-func insertMeasurementOkMock(m models.Measurement, measurements *[]models.Measurement) (bool, error) {
+func insertMeasurementOkMock(m models.Measurement, measurements *[]models.Measurement) (string, error) {
 	*measurements = append(*measurements, m)
-	return true, nil
+	return "uuid", nil
 }
 
-func insertMeasurementErrorMock(m models.Measurement, measurements *[]models.Measurement) (bool, error) {
-	return false, errors.New("database error")
+func insertMeasurementErrorMock(m models.Measurement, measurements *[]models.Measurement) (string, error) {
+	return "", errors.New("database error")
 }
 
 type mqttClientStub struct {

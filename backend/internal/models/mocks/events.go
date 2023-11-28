@@ -6,7 +6,7 @@ import (
 	"github.com/miselaytes-anton/tatadata/backend/internal/models"
 )
 
-type InsertEventMock = func(models.Event, *[]models.Event) (bool, error)
+type InsertEventMock = func(models.Event, *[]models.Event) (string, error)
 
 type GetEventsMock = func(models.EventsQuery, *[]models.Event) ([]models.Event, error)
 
@@ -16,7 +16,7 @@ type EventModelMock struct {
 	GetEventsMock
 }
 
-func (m *EventModelMock) InsertEvent(event models.Event) (bool, error) {
+func (m *EventModelMock) InsertEvent(event models.Event) (string, error) {
 	return m.InsertEventMock(event, &m.Events)
 }
 
@@ -32,11 +32,11 @@ func GetEventsErrorMock(mq models.EventsQuery, events *[]models.Event) ([]models
 	return nil, errors.New("database error")
 }
 
-func InsertEventOkMock(m models.Event, events *[]models.Event) (bool, error) {
+func InsertEventOkMock(m models.Event, events *[]models.Event) (string, error) {
 	*events = append(*events, m)
-	return true, nil
+	return "uuid", nil
 }
 
-func InsertEventErrorMock(m models.Event, events *[]models.Event) (bool, error) {
-	return false, errors.New("database error")
+func InsertEventErrorMock(m models.Event, events *[]models.Event) (string, error) {
+	return "", errors.New("database error")
 }

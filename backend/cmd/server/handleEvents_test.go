@@ -148,6 +148,8 @@ func Test_handleEventsList(t *testing.T) {
 }
 
 func Test_handleEventsCreate(t *testing.T) {
+	type Response struct{ ID string }
+
 	event := models.Event{
 		Timestamp:  1,
 		LocationID: "bedroom",
@@ -181,7 +183,7 @@ func Test_handleEventsCreate(t *testing.T) {
 		{
 			"valid request",
 			"/api/events",
-			http.StatusCreated,
+			http.StatusOK,
 		},
 	}
 
@@ -193,13 +195,25 @@ func Test_handleEventsCreate(t *testing.T) {
 				if err != nil {
 					log.Fatal(err)
 				}
-				statusCode, _, _ := ts.PostJson(t, d.urlPath, b)
+				statusCode, _, body := ts.PostJson(t, d.urlPath, b)
 
 				if diff := cmp.Diff(d.expectedCode, statusCode); diff != "" {
 					t.Error(diff)
 				}
 
 				if diff := cmp.Diff(event, eventsMock.Events[0]); diff != "" {
+					t.Error(diff)
+				}
+
+				response := new(Response)
+
+				err = json.Unmarshal(body, &response)
+
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if diff := cmp.Diff(response, &Response{ID: "uuid"}); diff != "" {
 					t.Error(diff)
 				}
 			},

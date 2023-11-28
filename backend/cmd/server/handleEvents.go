@@ -54,6 +54,10 @@ func (s *Server) handleEventsList() http.HandlerFunc {
 }
 
 func (s *Server) handleEventsCreate() http.HandlerFunc {
+	type response struct {
+		ID string `json:"id"`
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		var event models.Event
 		err := json.NewDecoder(r.Body).Decode(&event)
@@ -63,12 +67,18 @@ func (s *Server) handleEventsCreate() http.HandlerFunc {
 			return
 		}
 
-		_, err = s.Events.InsertEvent(event)
+		id, err := s.Events.InsertEvent(event)
+
 		if err != nil {
 			s.jsonError(w, err, http.StatusInternalServerError)
 			return
 		}
 
-		w.WriteHeader(http.StatusCreated)
+		err = json.NewEncoder(w).Encode(response{ID: id})
+
+		if err != nil {
+			s.jsonError(w, err, http.StatusInternalServerError)
+			return
+		}
 	}
 }

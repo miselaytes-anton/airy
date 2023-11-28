@@ -8,11 +8,12 @@ import (
 
 type MeasurementModelInterface interface {
 	GetMeasurements(MeasurementsQuery) ([]Measurement, error)
-	InsertMeasurement(Measurement) (bool, error)
+	InsertMeasurement(Measurement) (string, error)
 }
 
 // Measurement represents a single measurement.
 type Measurement struct {
+	ID          string  `json:"id"`
 	Timestamp   int64   `json:"timestamp"`
 	SensorID    string  `json:"sensorId"`
 	IAQ         float64 `json:"iaq"`
@@ -36,21 +37,32 @@ type MeasurementModel struct {
 }
 
 // InsertMeasurement inserts a new measurement into the database.
-func (m MeasurementModel) InsertMeasurement(measurement Measurement) (bool, error) {
+func (m MeasurementModel) InsertMeasurement(measurement Measurement) (string, error) {
 	query := `insert into "measurements"("timestamp", "sensor_id", "iaq",  "co2", "voc", "pressure", "temperature", "humidity") values($1, $2, $3, $4, $5, $6, $7, $8)`
-	_, err := m.DB.Exec(query, measurement.Timestamp, measurement.SensorID, measurement.IAQ, measurement.CO2, measurement.VOC, measurement.Pressure, measurement.Temperature, measurement.Humidity)
+	err := m.DB.QueryRow(
+		query,
+		measurement.Timestamp,
+		measurement.SensorID,
+		measurement.IAQ,
+		measurement.CO2,
+		measurement.VOC,
+		measurement.Pressure,
+		measurement.Temperature,
+		measurement.Humidity,
+	).Scan(&measurement)
 
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
-	return true, nil
+	return measurement.ID, nil
 }
 
 // GetMeasurements returns measurements aggregated by resolution (ms) between fromEpoch and toEpoch.
 func (m MeasurementModel) GetMeasurements(mq MeasurementsQuery) ([]Measurement, error) {
 	query := `
-	select (floor("timestamp"/$1)*$1)::numeric::integer as timestamp, 
+	select id,
+	(floor("timestamp"/$1)*$1)::numeric::integer as timestamp, 
 	sensor_id, 
 	avg(iaq) as iaq, 
 	avg(humidity) as humidity,
@@ -76,7 +88,7 @@ func (m MeasurementModel) GetMeasurements(mq MeasurementsQuery) ([]Measurement, 
 
 	for rows.Next() {
 		var measurement Measurement
-		err := rows.Scan(&measurement.Timestamp, &measurement.SensorID, &measurement.IAQ, &measurement.Humidity, &measurement.Temperature, &measurement.Pressure, &measurement.CO2, &measurement.VOC)
+		err := rows.Scan(&measurement.ID, &measurement.Timestamp, &measurement.SensorID, &measurement.IAQ, &measurement.Humidity, &measurement.Temperature, &measurement.Pressure, &measurement.CO2, &measurement.VOC)
 		if err != nil {
 			return nil, err
 		}
