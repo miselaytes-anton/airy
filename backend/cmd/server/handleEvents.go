@@ -62,7 +62,7 @@ func (s *Server) handleEventsCreate() http.HandlerFunc {
 		var event models.Event
 		err := json.NewDecoder(r.Body).Decode(&event)
 		if err != nil {
-			err := errors.New("invalid event format, expected timestamp in ms, locationId and eventType")
+			err := errors.New("invalid event format, expected startTimestamp in ms, locationId and eventType")
 			s.jsonError(w, err, http.StatusBadRequest)
 			return
 		}

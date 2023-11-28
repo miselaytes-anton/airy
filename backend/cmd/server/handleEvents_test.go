@@ -18,9 +18,9 @@ import (
 
 func Test_handleEventsList(t *testing.T) {
 	events := []models.Event{{
-		Timestamp:  1,
-		LocationID: "bedroom",
-		EventType:  "window:open",
+		StartTimestamp: 1,
+		LocationID:     "bedroom",
+		EventType:      "window:open",
 	}}
 
 	eventsMock := mocks.EventModelMock{
@@ -151,9 +151,9 @@ func Test_handleEventsCreate(t *testing.T) {
 	type Response struct{ ID string }
 
 	event := models.Event{
-		Timestamp:  1,
-		LocationID: "bedroom",
-		EventType:  "window:open",
+		StartTimestamp: 1,
+		LocationID:     "bedroom",
+		EventType:      "window:open",
 	}
 
 	eventsMock := mocks.EventModelMock{
@@ -238,7 +238,7 @@ func Test_handleEventsCreate(t *testing.T) {
 			http.StatusBadRequest,
 			ResponseError{
 				Status: "Bad Request",
-				Error:  "invalid event format, expected timestamp in ms, locationId and eventType",
+				Error:  "invalid event format, expected startTimestamp in ms, locationId and eventType",
 			},
 			mocks.InsertEventOkMock,
 			make([]byte, 0),

@@ -57,7 +57,7 @@ func generateMarkLinesFromEvents(eventsPerSensor eventsPerSensor) markLinesPerSe
 
 	for sensorID, events := range eventsPerSensor {
 		for _, event := range events {
-			items[sensorID] = append(items[sensorID], opts.MarkLineNameXAxisItem{Name: event.EventType, XAxis: time.Unix(event.Timestamp, 0)})
+			items[sensorID] = append(items[sensorID], opts.MarkLineNameXAxisItem{Name: event.EventType, XAxis: time.Unix(event.StartTimestamp, 0)})
 		}
 	}
 
