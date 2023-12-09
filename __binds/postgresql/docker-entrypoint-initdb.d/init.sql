@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXITS measurements (
+CREATE TABLE measurements (
     sensor_id VARCHAR (255) NOT NULL,
     timestamp INT NOT NULL,
     iaq DOUBLE PRECISION,
@@ -17,7 +17,7 @@ CREATE TABLE events (
     PRIMARY KEY (location_id, timestamp, type)
 );
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION "uuid-ossp";
 
 ALTER TABLE events DROP CONSTRAINT events_pkey;
 ALTER TABLE events ADD id uuid DEFAULT uuid_generate_v4 ();

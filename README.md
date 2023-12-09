@@ -104,3 +104,92 @@ brssl ta ./assets/ca-chain.pem > ./iot/trust.h
         Estimates a CO2-equivalent (CO2eq) concentration [ppm] in the environment. It is also calculated based on the sIAQ output and derived from VOC measurements and correlation from field studies.
 
 Since bVOCeq and CO2eq are based on the sIAQ output, they are expected to perform optimally in stationnary applications where the main source of VOCs in the environment comes from human activity (e.g. in a bedroom).
+
+# API
+
+## Events
+
+### Create event
+POST /api/events
+
+```json
+{
+  "startTimestamp": 1698090929,
+  "eventType": "window:open",
+  "locationId": "bedroom"
+}
+```
+
+- `startTimestamp` required, must be unix timestamps in ms.
+- `eventType` required, must be a string, can be anything
+- `eventType` required, must be a string, one of `bedroom`, `livingroom`
+
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{"startTimestamp": 1698090929, "eventType": "window:open", "locationId": "bedroom"}' http://localhost:8081/api/events
+```
+
+### Query events
+
+GET /api/events?from=1698090929&to=1698090930
+
+- `from` must be unix timestamps in ms.
+- `to` must be unix timestamps in ms.
+- `to` must be greater than `from`
+
+```json
+[{
+ "id": "uuid",
+ "startTimestamp": 1698090929,
+ "endTimestamp": 1698090929,
+  "eventType": "window:open",
+  "locationId": "bedroom"
+}]
+```
+
+### Add end timestamp to event
+
+PATCH  /api/events/:eventId
+
+```json
+{"endTimestamp": 1698090929}
+```
+
+```bash
+curl -X PATCH -H "Content-Type: application/json" -d '{"endTimestamp": 1698090929}' http://localhost:8081/api/events
+```
+
+## Measurements
+
+### Query measurements
+
+GET /api/measurements?resolution=86400&to=1702156335&from=1701810734
+
+- `from` must be a unix timestamp in ms
+- `to` must be a unix timestamp in ms
+- `resolution` must be in ms, for example 86400 for a day, 3600 for an hour
+
+```json
+[
+  {
+    "timestamp": 1701734400,
+    "sensorId": "bedroom",
+    "iaq": 108.49368098159503,
+    "co2": 949.001042944785,
+    "voc": 1.4850920245398769,
+    "pressure": 101128.12865030681,
+    "temperature": 18.051226993865033,
+    "humidity": 44.831656441717776
+  },
+  {
+    "timestamp": 1701734400,
+    "sensorId": "livingroom",
+    "iaq": 98.50804878048783,
+    "co2": 940.1318902439023,
+    "voc": 1.377317073170732,
+    "pressure": 101159.84170731703,
+    "temperature": 20.659268292682928,
+    "humidity": 42.94823170731707
+  }
+]
+
+```
