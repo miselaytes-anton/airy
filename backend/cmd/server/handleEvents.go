@@ -58,8 +58,8 @@ func (s *Server) handleEventsList() http.HandlerFunc {
 
 func (s *Server) handleEventsCreate() http.HandlerFunc {
 	type request struct {
-		StartTimestamp int64  `json:"startTimestamp" validate:"required,gte=0"`
-		EndTimestamp   int64  `json:"endTimestamp,omitempty" validate:"omitempty,gtfield=StartTimestamp"`
+		StartTimestamp int64  `json:"startTimestamp" validate:"required,gte=0,lte=2147483647"`
+		EndTimestamp   int64  `json:"endTimestamp,omitempty" validate:"omitempty,gtfield=StartTimestamp,lte=2147483647"`
 		LocationID     string `json:"locationId" validate:"required,oneof=bedroom livingroom"`
 		EventType      string `json:"eventType" validate:"required"`
 	}
