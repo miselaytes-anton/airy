@@ -2,11 +2,15 @@ package models
 
 import (
 	"database/sql"
+	"errors"
+
+	"github.com/jackc/pgerrcode"
+	"github.com/lib/pq"
 )
 
 type EventModelInterface interface {
 	GetEvents(q EventsQuery) ([]Event, error)
-	InsertEvent(e Event) (string, error)
+	InsertEvent(e Event) (Event, error)
 	UpdateEvent(id string, endTimestamp int64) (Event, error)
 }
 
@@ -22,11 +26,11 @@ type EventsQuery struct {
 
 // Event represents a single event.
 type Event struct {
-	ID             string `json:"id"`
-	StartTimestamp int64  `json:"startTimestamp"`
-	EndTimestamp   int64  `json:"endTimestamp"`
-	LocationID     string `json:"locationId"`
-	EventType      string `json:"eventType"`
+	ID             string `json:"id,omitempty"`
+	StartTimestamp int64  `json:"startTimestamp,omitempty"`
+	EndTimestamp   int64  `json:"endTimestamp,omitempty"`
+	LocationID     string `json:"locationId,omitempty"`
+	EventType      string `json:"eventType,omitempty"`
 }
 
 // GetEvents returns events between fromEpoch and toEpoch.
@@ -59,16 +63,24 @@ func (m EventModel) GetEvents(q EventsQuery) ([]Event, error) {
 	return events, nil
 }
 
+var ErrDuplicateEvent = errors.New("event with this combination of startTimestamp, type and locationId already exists")
+
 // InsertEvent inserts a new event into the database.
-func (m EventModel) InsertEvent(e Event) (string, error) {
+func (m EventModel) InsertEvent(e Event) (Event, error) {
 	query := `insert into "events"("start_timestamp", "end_timestamp", "location_id", "type") values($1, $2, $3, $4) RETURNING id`
 	err := m.DB.QueryRow(query, e.StartTimestamp, e.EndTimestamp, e.LocationID, e.EventType).Scan(&e.ID)
 
 	if err != nil {
-		return "", err
+		// check for a postgres duplicate key error using error code
+		// https://www.postgresql.org/docs/9.5/errcodes-appendix.html
+		pqErr, ok := err.(*pq.Error)
+		if ok && pgerrcode.IsIntegrityConstraintViolation(string(pqErr.Code)) {
+			return Event{}, ErrDuplicateEvent
+		}
+		return Event{}, err
 	}
 
-	return e.ID, nil
+	return e, nil
 }
 
 func (m EventModel) UpdateEvent(id string, endTimestamp int64) (Event, error) {

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/julienschmidt/httprouter"
 	"github.com/miselaytes-anton/tatadata/backend/internal/models"
 )
@@ -56,27 +57,55 @@ func (s *Server) handleEventsList() http.HandlerFunc {
 }
 
 func (s *Server) handleEventsCreate() http.HandlerFunc {
-	type response struct {
-		ID string `json:"id"`
+	type request struct {
+		StartTimestamp int64  `json:"startTimestamp" validate:"required,gte=0"`
+		EndTimestamp   int64  `json:"endTimestamp,omitempty" validate:"omitempty,gtfield=StartTimestamp"`
+		LocationID     string `json:"locationId" validate:"required,oneof=bedroom livingroom"`
+		EventType      string `json:"eventType" validate:"required"`
 	}
 
+	type response = models.Event
+
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		var event models.Event
-		err := json.NewDecoder(r.Body).Decode(&event)
+		var request request
+		err := s.readJson(w, r, &request)
+
 		if err != nil {
-			err := errors.New("invalid event format, expected startTimestamp in ms, locationId and eventType")
 			s.jsonError(w, err, http.StatusBadRequest)
 			return
 		}
 
-		id, err := s.Events.InsertEvent(event)
+		err = validate.Struct(request)
 
 		if err != nil {
+			s.jsonValidationError(w, err)
+			return
+		}
+
+		event := models.Event{
+			StartTimestamp: request.StartTimestamp,
+			EndTimestamp:   request.EndTimestamp,
+			LocationID:     request.LocationID,
+			EventType:      request.EventType,
+		}
+
+		event, err = s.Events.InsertEvent(event)
+
+		if err != nil {
+			if errors.Is(err, models.ErrDuplicateEvent) {
+				s.jsonError(w, err, http.StatusConflict)
+				return
+			}
+
 			s.jsonError(w, err, http.StatusInternalServerError)
 			return
 		}
 
-		err = json.NewEncoder(w).Encode(response{ID: id})
+		var response response = event
+
+		err = json.NewEncoder(w).Encode(response)
 
 		if err != nil {
 			s.jsonError(w, err, http.StatusInternalServerError)

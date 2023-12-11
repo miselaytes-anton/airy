@@ -148,12 +148,24 @@ func Test_handleEventsList(t *testing.T) {
 }
 
 func Test_handleEventsCreate(t *testing.T) {
-	type Response struct{ ID string }
+	type Response = models.Event
+	type Request struct {
+		StartTimestamp int64  `json:"startTimestamp"`
+		LocationID     string `json:"locationId"`
+		EventType      string `json:"eventType"`
+	}
 
 	event := models.Event{
+		ID:             "uuid",
 		StartTimestamp: 1,
 		LocationID:     "bedroom",
 		EventType:      "window:open",
+	}
+
+	request := Request{
+		StartTimestamp: event.StartTimestamp,
+		LocationID:     event.LocationID,
+		EventType:      event.EventType,
 	}
 
 	eventsMock := mocks.EventModelMock{
@@ -191,7 +203,7 @@ func Test_handleEventsCreate(t *testing.T) {
 		t.Run(
 			d.name,
 			func(t *testing.T) {
-				b, err := json.Marshal(event)
+				b, err := json.Marshal(request)
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -213,14 +225,14 @@ func Test_handleEventsCreate(t *testing.T) {
 					log.Fatal(err)
 				}
 
-				if diff := cmp.Diff(response, &Response{ID: "uuid"}); diff != "" {
+				if diff := cmp.Diff(*response, event); diff != "" {
 					t.Error(diff)
 				}
 			},
 		)
 	}
 
-	eventBytes, err := json.Marshal(event)
+	requestBytes, err := json.Marshal(request)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -238,7 +250,7 @@ func Test_handleEventsCreate(t *testing.T) {
 			http.StatusBadRequest,
 			ResponseError{
 				Status: "Bad Request",
-				Error:  "invalid event format, expected startTimestamp in ms, locationId and eventType",
+				Error:  "body must not be empty",
 			},
 			mocks.InsertEventOkMock,
 			make([]byte, 0),
@@ -252,7 +264,7 @@ func Test_handleEventsCreate(t *testing.T) {
 				Error:  "internal server error occured",
 			},
 			mocks.InsertEventErrorMock,
-			eventBytes,
+			requestBytes,
 		},
 	}
 
