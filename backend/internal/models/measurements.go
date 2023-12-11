@@ -13,7 +13,7 @@ type MeasurementModelInterface interface {
 
 // Measurement represents a single measurement.
 type Measurement struct {
-	ID          string  `json:"id"`
+	ID          string  `json:"id,omitempty"`
 	Timestamp   int64   `json:"timestamp"`
 	SensorID    string  `json:"sensorId"`
 	IAQ         float64 `json:"iaq"`
