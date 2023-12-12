@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -163,7 +164,7 @@ func Test_handleEventsCreate(t *testing.T) {
 		EventType:      "window:open",
 	}
 
-	request := Request{
+	validRequest := Request{
 		StartTimestamp: event.StartTimestamp,
 		LocationID:     event.LocationID,
 		EventType:      event.EventType,
@@ -204,7 +205,7 @@ func Test_handleEventsCreate(t *testing.T) {
 		t.Run(
 			d.name,
 			func(t *testing.T) {
-				b, err := json.Marshal(request)
+				b, err := json.Marshal(validRequest)
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -233,29 +234,15 @@ func Test_handleEventsCreate(t *testing.T) {
 		)
 	}
 
-	requestBytes, err := json.Marshal(request)
-	if err != nil {
-		log.Fatal(err)
-	}
 	invalidRequests := []struct {
 		name            string
 		urlPath         string
 		expectedCode    int
 		expectedError   ResponseError
 		insertEventMock mocks.InsertEventMock
-		requestBody     []byte
+		request         Request
 	}{
-		{
-			"invalid request",
-			"/api/events",
-			http.StatusBadRequest,
-			ResponseError{
-				Status: "Bad Request",
-				Error:  "body must not be empty",
-			},
-			mocks.InsertEventOkMock,
-			make([]byte, 0),
-		},
+
 		{
 			"database error",
 			"/api/events",
@@ -265,7 +252,22 @@ func Test_handleEventsCreate(t *testing.T) {
 				Error:  "internal server error occured",
 			},
 			mocks.InsertEventErrorMock,
-			requestBytes,
+			validRequest,
+		},
+		{
+			"invalid payload",
+			"/api/events",
+			http.StatusBadRequest,
+			ResponseError{
+				Status: "Bad Request",
+				Error: strings.Join([]string{
+					"startTimestamp did not pass validation rules: required",
+					"locationID did not pass validation rules: required",
+					"eventType did not pass validation rules: required",
+				}, ", "),
+			},
+			mocks.InsertEventErrorMock,
+			Request{},
 		},
 	}
 
@@ -273,8 +275,12 @@ func Test_handleEventsCreate(t *testing.T) {
 		t.Run(
 			d.name,
 			func(t *testing.T) {
+				requestBytes, err := json.Marshal(d.request)
+				if err != nil {
+					log.Fatal(err)
+				}
 				eventsMock.InsertEventMock = d.insertEventMock
-				statusCode, _, body := ts.PostJson(t, d.urlPath, d.requestBody)
+				statusCode, _, body := ts.PostJson(t, d.urlPath, requestBytes)
 
 				if diff := cmp.Diff(d.expectedCode, statusCode); diff != "" {
 					t.Error(diff)
