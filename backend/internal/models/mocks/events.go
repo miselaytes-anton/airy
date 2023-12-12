@@ -7,13 +7,15 @@ import (
 )
 
 type InsertEventMock = func(models.Event, *[]models.Event) (models.Event, error)
-type GetEventsMock = func(models.EventsQuery, *[]models.Event) ([]models.Event, error)
-type UpdateEventMock = func(string, int64, *[]models.Event) (models.Event, error)
+type GetAllMock = func(models.EventsQuery, *[]models.Event) ([]models.Event, error)
+type GetMock = func(string, *[]models.Event) (models.Event, error)
+type UpdateEventMock = func(models.Event, *[]models.Event) (models.Event, error)
 
 type EventModelMock struct {
 	Events []models.Event
 	InsertEventMock
-	GetEventsMock
+	GetAllMock
+	GetMock
 	UpdateEventMock
 }
 
@@ -21,19 +23,32 @@ func (m *EventModelMock) InsertEvent(event models.Event) (models.Event, error) {
 	return m.InsertEventMock(event, &m.Events)
 }
 
-func (m *EventModelMock) UpdateEvent(id string, endTimestamp int64) (models.Event, error) {
-	return m.UpdateEventMock(id, endTimestamp, &m.Events)
+func (m *EventModelMock) UpdateEvent(e models.Event) (models.Event, error) {
+	return m.UpdateEventMock(e, &m.Events)
 }
 
-func (m *EventModelMock) GetEvents(mq models.EventsQuery) ([]models.Event, error) {
-	return m.GetEventsMock(mq, &m.Events)
+func (m *EventModelMock) Get(id string) (models.Event, error) {
+	return m.GetMock(id, &m.Events)
 }
 
-func GetEventsOkMock(mq models.EventsQuery, events *[]models.Event) ([]models.Event, error) {
+func (m *EventModelMock) GetAll(mq models.EventsQuery) ([]models.Event, error) {
+	return m.GetAllMock(mq, &m.Events)
+}
+
+func GetOkMock(id string, events *[]models.Event) (models.Event, error) {
+	for _, event := range *events {
+		if event.ID == id {
+			return event, nil
+		}
+	}
+	return models.Event{}, nil
+}
+
+func GetAllOkMock(mq models.EventsQuery, events *[]models.Event) ([]models.Event, error) {
 	return *events, nil
 }
 
-func GetEventsErrorMock(mq models.EventsQuery, events *[]models.Event) ([]models.Event, error) {
+func GetAllErrorMock(mq models.EventsQuery, events *[]models.Event) ([]models.Event, error) {
 	return nil, errors.New("database error")
 }
 

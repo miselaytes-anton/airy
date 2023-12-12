@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -42,7 +41,7 @@ func (s *Server) handleEventsList() http.HandlerFunc {
 			return
 		}
 
-		events, err := s.Events.GetEvents(q)
+		events, err := s.Events.GetAll(q)
 		if err != nil {
 			s.jsonError(w, err, http.StatusInternalServerError)
 			return
@@ -58,7 +57,7 @@ func (s *Server) handleEventsList() http.HandlerFunc {
 
 func (s *Server) handleEventsCreate() http.HandlerFunc {
 	type request struct {
-		StartTimestamp int64  `json:"startTimestamp" validate:"required,gte=0,lte=2147483647"`
+		StartTimestamp int64  `json:"startTimestamp" validate:"required,gt=0,lte=2147483647"`
 		EndTimestamp   int64  `json:"endTimestamp,omitempty" validate:"omitempty,gtfield=StartTimestamp,lte=2147483647"`
 		LocationID     string `json:"locationId" validate:"required,oneof=bedroom livingroom"`
 		EventType      string `json:"eventType" validate:"required"`
@@ -115,33 +114,76 @@ func (s *Server) handleEventsCreate() http.HandlerFunc {
 }
 
 func (s *Server) handleEventsUpdate() http.HandlerFunc {
+	type request struct {
+		StartTimestamp *int64  `json:"startTimestamp,omitempty" validate:"omitempty,gt=0,lte=2147483647"`
+		EndTimestamp   *int64  `json:"endTimestamp,omitempty" validate:"omitempty,gt=0,lte=2147483647"`
+		LocationID     *string `json:"locationId,omitempty" validate:"omitempty,oneof=bedroom livingroom"`
+		EventType      *string `json:"eventType,omitempty" validate:"omitempty"`
+	}
+
+	type response = models.Event
+
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		var event models.Event
-		err := json.NewDecoder(r.Body).Decode(&event)
-		if err != nil || event.EndTimestamp <= 0 {
-			err := errors.New("invalid event format, expected endTimestamp in ms")
+		var request request
+		err := s.readJson(w, r, &request)
+		if err != nil {
 			s.jsonError(w, err, http.StatusBadRequest)
+			return
+		}
+
+		err = validate.Struct(request)
+		if err != nil {
+			s.jsonValidationError(w, err)
 			return
 		}
 
 		params := httprouter.ParamsFromContext(r.Context())
 
-		id := params.ByName("id")
-
-		event, err = s.Events.UpdateEvent(id, event.EndTimestamp)
-
-		if err == sql.ErrNoRows {
-			err = errors.New("event not found")
-			s.jsonError(w, err, http.StatusNotFound)
-			return
-		}
+		event, err := s.Events.Get(params.ByName("id"))
 
 		if err != nil {
+			if errors.Is(err, models.ErrEventNotFound) {
+				s.jsonError(w, err, http.StatusNotFound)
+				return
+			}
 			s.jsonError(w, err, http.StatusInternalServerError)
 			return
 		}
 
-		err = json.NewEncoder(w).Encode(event)
+		if request.StartTimestamp != nil {
+			event.StartTimestamp = *request.StartTimestamp
+		}
+		if request.EndTimestamp != nil {
+			event.EndTimestamp = *request.EndTimestamp
+		}
+		if request.LocationID != nil {
+			event.LocationID = *request.LocationID
+		}
+		if request.EventType != nil {
+			event.EventType = *request.EventType
+		}
+
+		if event.StartTimestamp > event.EndTimestamp {
+			s.jsonError(w, errors.New("startTimestamp must be less than endTimestamp"), http.StatusBadRequest)
+			return
+		}
+
+		event, err = s.Events.UpdateEvent(event)
+
+		if err != nil {
+			if errors.Is(err, models.ErrDuplicateEvent) {
+				s.jsonError(w, err, http.StatusConflict)
+				return
+			}
+			s.jsonError(w, err, http.StatusInternalServerError)
+			return
+		}
+
+		response := response(event)
+
+		err = json.NewEncoder(w).Encode(response)
 
 		if err != nil {
 			s.jsonError(w, err, http.StatusInternalServerError)

@@ -25,7 +25,8 @@ func Test_handleEventsList(t *testing.T) {
 
 	eventsMock := mocks.EventModelMock{
 		Events:          events,
-		GetEventsMock:   mocks.GetEventsOkMock,
+		GetMock:         mocks.GetOkMock,
+		GetAllMock:      mocks.GetAllOkMock,
 		InsertEventMock: mocks.InsertEventOkMock,
 	}
 
@@ -85,7 +86,7 @@ func Test_handleEventsList(t *testing.T) {
 		urlPath       string
 		expectedCode  int
 		expectedError ResponseError
-		getEventsMock mocks.GetEventsMock
+		getEventsMock mocks.GetAllMock
 	}{
 		{
 			"invalid to",
@@ -95,7 +96,7 @@ func Test_handleEventsList(t *testing.T) {
 				Status: "Bad Request",
 				Error:  "invalid to: hello, must be a unix timestamp in ms",
 			},
-			mocks.GetEventsOkMock,
+			mocks.GetAllOkMock,
 		},
 		{
 			"invalid from",
@@ -105,7 +106,7 @@ func Test_handleEventsList(t *testing.T) {
 				Status: "Bad Request",
 				Error:  "invalid from: hello, must be a unix timestamp in ms",
 			},
-			mocks.GetEventsOkMock,
+			mocks.GetAllOkMock,
 		},
 		{
 			"database error",
@@ -115,7 +116,7 @@ func Test_handleEventsList(t *testing.T) {
 				Status: "Internal Server Error",
 				Error:  "internal server error occured",
 			},
-			mocks.GetEventsErrorMock,
+			mocks.GetAllErrorMock,
 		},
 	}
 
@@ -123,7 +124,7 @@ func Test_handleEventsList(t *testing.T) {
 		t.Run(
 			d.name,
 			func(t *testing.T) {
-				eventsMock.GetEventsMock = d.getEventsMock
+				eventsMock.GetAllMock = d.getEventsMock
 
 				statusCode, _, body := ts.Get(t, d.urlPath)
 
@@ -170,7 +171,7 @@ func Test_handleEventsCreate(t *testing.T) {
 
 	eventsMock := mocks.EventModelMock{
 		Events:          make([]models.Event, 0),
-		GetEventsMock:   mocks.GetEventsOkMock,
+		GetAllMock:      mocks.GetAllOkMock,
 		InsertEventMock: mocks.InsertEventOkMock,
 	}
 

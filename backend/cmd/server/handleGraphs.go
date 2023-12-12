@@ -203,7 +203,7 @@ func (s *Server) handleGraphs() http.HandlerFunc {
 			return
 		}
 
-		events, err := s.Events.GetEvents(models.EventsQuery{StartEpoch: params.StartEpoch, EndEpoch: params.EndEpoch})
+		events, err := s.Events.GetAll(models.EventsQuery{StartEpoch: params.StartEpoch, EndEpoch: params.EndEpoch})
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
