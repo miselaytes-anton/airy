@@ -209,7 +209,7 @@ func Test_handleEventsCreate(t *testing.T) {
 				if err != nil {
 					log.Fatal(err)
 				}
-				statusCode, _, body := ts.PostJson(t, d.urlPath, b)
+				statusCode, _, body := ts.Post(t, d.urlPath, b)
 
 				if diff := cmp.Diff(d.expectedCode, statusCode); diff != "" {
 					t.Error(diff)
@@ -280,7 +280,7 @@ func Test_handleEventsCreate(t *testing.T) {
 					log.Fatal(err)
 				}
 				eventsMock.InsertEventMock = d.insertEventMock
-				statusCode, _, body := ts.PostJson(t, d.urlPath, requestBytes)
+				statusCode, _, body := ts.Post(t, d.urlPath, requestBytes)
 
 				if diff := cmp.Diff(d.expectedCode, statusCode); diff != "" {
 					t.Error(diff)
@@ -295,6 +295,95 @@ func Test_handleEventsCreate(t *testing.T) {
 				}
 
 				if diff := cmp.Diff(d.expectedError, *responseError); diff != "" {
+					t.Error(diff)
+				}
+			},
+		)
+	}
+}
+
+func Test_handleEventsUpdate(t *testing.T) {
+	type Request struct {
+		StartTimestamp int64  `json:"startTimestamp,omitempty"`
+		EndTimestamp   int64  `json:"endTimestamp,omitempty"`
+		LocationID     string `json:"locationId,omitempty"`
+		EventType      string `json:"eventType,omitempty"`
+	}
+
+	eventsMock := mocks.EventModelMock{
+		Events:          make([]models.Event, 0),
+		GetMock:         mocks.GetOkMock,
+		UpdateEventMock: mocks.UpdateEventOkMock,
+	}
+
+	router := httprouter.New()
+	server := Server{
+		Router:   router,
+		Events:   &eventsMock,
+		LogError: log.New(io.Discard, "", 0),
+		LogInfo:  log.New(io.Discard, "", 0),
+	}
+
+	server.routes()
+
+	ts := testserver.TestServer{Server: httptest.NewServer(router)}
+	defer ts.Server.Close()
+
+	requests := []struct {
+		name         string
+		urlPath      string
+		expectedCode int
+		request      Request
+	}{
+		{
+			"valid request: only start timestamp",
+			"/api/events/uuid",
+			http.StatusOK,
+			Request{
+				EndTimestamp: 1,
+			},
+		},
+		{
+			"valid request: all fields",
+			"/api/events/uuid",
+			http.StatusOK,
+			Request{
+				StartTimestamp: 1,
+				EndTimestamp:   2,
+				LocationID:     "bedroom",
+				EventType:      "window:open",
+			},
+		},
+		{
+			"invalid request: start after end",
+			"/api/events/uuid",
+			http.StatusBadRequest,
+			Request{
+				StartTimestamp: 2,
+				EndTimestamp:   1,
+			},
+		},
+		{
+			"invalid request: unknown locationId",
+			"/api/events/uuid",
+			http.StatusBadRequest,
+			Request{
+				LocationID: "kitchen",
+			},
+		},
+	}
+
+	for _, d := range requests {
+		t.Run(
+			d.name,
+			func(t *testing.T) {
+				b, err := json.Marshal(d.request)
+				if err != nil {
+					log.Fatal(err)
+				}
+				statusCode, _, _ := ts.Patch(t, d.urlPath, b)
+
+				if diff := cmp.Diff(d.expectedCode, statusCode); diff != "" {
 					t.Error(diff)
 				}
 			},

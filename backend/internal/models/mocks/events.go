@@ -61,3 +61,7 @@ func InsertEventOkMock(e models.Event, events *[]models.Event) (models.Event, er
 func InsertEventErrorMock(e models.Event, events *[]models.Event) (models.Event, error) {
 	return models.Event{}, errors.New("database error")
 }
+
+func UpdateEventOkMock(e models.Event, events *[]models.Event) (models.Event, error) {
+	return e, nil
+}
