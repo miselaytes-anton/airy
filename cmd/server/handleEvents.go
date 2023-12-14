@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/julienschmidt/httprouter"
-	"github.com/miselaytes-anton/tatadata/backend/internal/models"
+	"github.com/miselaytes-anton/tatadata/internal/models"
 )
 
 func (s *Server) handleEventsList() http.HandlerFunc {

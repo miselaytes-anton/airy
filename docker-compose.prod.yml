@@ -7,7 +7,6 @@ services:
     - target: 8081
       published: 8081
     build: 
-      context: backend/.
       dockerfile: server.dockerfile
     networks:
       - tatadata-net
@@ -20,7 +19,6 @@ services:
     container_name: tatadata-processor
     restart: always
     build: 
-      context: backend/.
       dockerfile: processor.dockerfile
     networks:
       - tatadata-net

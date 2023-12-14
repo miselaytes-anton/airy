@@ -83,7 +83,7 @@ func (m EventModel) GetAll(q EventsQuery) ([]Event, error) {
 
 // InsertEvent inserts a new event into the database.
 func (m EventModel) InsertEvent(e Event) (Event, error) {
-	query := `insert into "events"("start_timestamp", "end_timestamp", "location_id", "type") values($1, $2, $3, $4) RETURNING id`
+	query := `insert into "events"("start_timestamp", "end_timestamp", "location_id", "type") values($1, NULLIF($2,0), $3, $4) RETURNING id`
 	err := m.DB.QueryRow(query, e.StartTimestamp, e.EndTimestamp, e.LocationID, e.EventType).Scan(&e.ID)
 
 	if err != nil {

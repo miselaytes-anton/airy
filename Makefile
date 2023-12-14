@@ -9,27 +9,27 @@ include .env
 build: vet
 	rm -rf ./build
 	mkdir ./build
-	go build  -o ./build/ ./backend/cmd/server
-	go build  -o ./build/ ./backend/cmd/processor
+	go build  -o ./build/ ./cmd/server
+	go build  -o ./build/ ./cmd/processor
 .PHONY:build
 
 ###############
 # Test and lint
 ###############
 test:
-	go test -v ./backend/cmd/processor ./backend/cmd/server
+	go test -v ./cmd/processor ./cmd/server
 test-c:
-	go test -v -cover -coverprofile=./build/c.out ./backend/cmd/processor ./backend/cmd/server
+	go test -v -cover -coverprofile=./build/c.out ./cmd/processor ./cmd/server
 	go tool cover -html=./build/c.out
 
 fmt:
-	go fmt ./backend/cmd/server/main.go 
-	go fmt ./backend/cmd/processor/main.go
+	go fmt ./cmd/server/main.go 
+	go fmt ./cmd/processor/main.go
 .PHONY:fmt
 
 vet: fmt
-	go vet ./backend/cmd/server/
-	go vet ./backend/cmd/processor/
+	go vet ./cmd/server/
+	go vet ./cmd/processor/
 .PHONY:vet
 
 #########
@@ -51,11 +51,11 @@ docker-down:
 # Start local processes
 #######################
 server:
-	set -a && source .env && set +a && go run ./backend/cmd/server
+	set -a && source .env && set +a && go run ./cmd/server
 .PHONY:server
 
 processor:
-	set -a && source .env && set +a && go run ./backend/cmd/processor
+	set -a && source .env && set +a && go run ./cmd/processor
 .PHONY:processor
 
 MESSAGE = bedroom 51.86 607.44 0.52 100853 27.25 60.22

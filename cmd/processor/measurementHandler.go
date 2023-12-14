@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/miselaytes-anton/tatadata/backend/internal/models"
+	"github.com/miselaytes-anton/tatadata/internal/models"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )

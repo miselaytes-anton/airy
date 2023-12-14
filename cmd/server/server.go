@@ -14,7 +14,7 @@ import (
 	"unicode"
 
 	"github.com/go-playground/validator/v10"
-	models "github.com/miselaytes-anton/tatadata/backend/internal/models"
+	models "github.com/miselaytes-anton/tatadata/internal/models"
 )
 
 // ServerEnv represents the environment containing server dependencies.
