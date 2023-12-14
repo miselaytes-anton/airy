@@ -1,4 +1,4 @@
-module github.com/miselaytes-anton/tatadata/backend
+module github.com/miselaytes-anton/tatadata
 
 go 1.21.0
 

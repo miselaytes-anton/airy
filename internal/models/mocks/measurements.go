@@ -1,6 +1,6 @@
 package mocks
 
-import "github.com/miselaytes-anton/tatadata/backend/internal/models"
+import "github.com/miselaytes-anton/tatadata/internal/models"
 
 type InsertMeasurementMock = func(models.Measurement, *[]models.Measurement) (string, error)
 

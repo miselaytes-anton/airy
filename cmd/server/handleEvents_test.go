@@ -12,9 +12,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/miselaytes-anton/tatadata/backend/internal/models"
-	"github.com/miselaytes-anton/tatadata/backend/internal/models/mocks"
-	"github.com/miselaytes-anton/tatadata/backend/internal/testserver"
+	"github.com/miselaytes-anton/tatadata/internal/models"
+	"github.com/miselaytes-anton/tatadata/internal/models/mocks"
+	"github.com/miselaytes-anton/tatadata/internal/testserver"
 )
 
 func Test_handleEventsList(t *testing.T) {
