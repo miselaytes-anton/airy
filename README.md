@@ -1,22 +1,37 @@
-# Local development
+# Airtata backend
 
-## Setup .env file
+This repository contains backend code for airtata project. Project consists of:
+- [Arduino IoT with environmental sensors](https://github.com/airtata/airtata-iot). It collects air quality, temperature, humidity and other enviromental data and sends it to an MQTT broker. 
+- [Mobile app](https://github.com/airtata/airtata-app). It allows to manage air events and view graphs for measurements.
+- Backend (this repository) consists of 2 applications:
+  - `api` for a mobile client, which provides possibility to manage air events and query enviromental measurements
+  - `processor` which connects to MQTT broker, subscribes to measurements sent by IoT and persists those to postgres database.
+
+  Backend also renders graphs which can be viewed in the browser at https://tatadata.amiselaytes.com/api/graphs
+
+  ![graph](./assets/airquality-graph.png "Airquality graph")
+
+
+## Local development
+
+### Setup .env file
 
 ```
 cp .env.sample .env 
 ```
 Now modify env to provide correct values.
 
-## Start docker with services and the server
+### Start docker with services and the server
 
 ```
 make docker-dev
 make server
 ```
 
-# VM setup
+## VM setup
 
-## Access
+### Firewall
+
 Applications running in docker can be accessed from exteranl host as well.
 This is because `sudo ufw status` gives us:
 
@@ -33,19 +48,19 @@ To                         Action      From
 
 Where 2375/tcp and 2376/tcp rules are giving docker permission to route requests to any open port on the host machine. Docker usese it to expose container ports. See also [uwf](https://wiki.ubuntu.com/UncomplicatedFirewall) docs.
 
-## SSL
+### SSL
 
-### Reminder of how SSL works
+<details>
+<summary>Reminder of how SSL works</summary>
 
 - Browser connects to a web server (website) secured with SSL (https). Browser requests that the server identify itself.
 - Server sends a copy of its SSL Certificate, including the server’s public key.
 - Browser checks the certificate root against a list of trusted CAs and that the certificate is unexpired, unrevoked, and that its common name is valid for the website that it is connecting to. If the browser trusts the certificate, it creates, encrypts, and sends back a symmetric session key using the server’s public key.
 - Server decrypts the symmetric session key using its private key and sends back an acknowledgement encrypted with the session key to start the encrypted session.
 - Server and Browser now encrypt all transmitted data with the session key.
+</details>
 
-### SSL setup on the server
-
-Certificates are configured using certbot
+Certificates are configured using certbot:
 
 ```
 sudo certbot --nginx -d amiselaytes.com -d tatadata.amiselaytes.com
@@ -56,7 +71,10 @@ See also [those docs](https://www.digitalocean.com/community/tutorials/how-to-se
 
 SSL connection is terminated in NGINX, then traffic from NGINX to MQTT in docker container is not encrypted.
 
+<details>
+<summary>Diagram</summary>
 ![nginx ssl](./assets/nginx-mqtt-ssl.png "Nginx SSL")
+</details>
 
 The following nginx config is used:
 
@@ -80,36 +98,13 @@ Command for testing SSL connection:
 make test-publisher
 ```
 
-Ensure correct values in .env file.
+Ensure correct `BROKER_ADDRESS` in .env file for command to work.
 
-### SSL setup on IoT
+## API specification
 
-- download [ROOT CA certificates chain](./assets/ca-chain.pem) from https://amiselaytes.com using browser 
-- convert this file to a C header file using [brssl tool](./scripts/brssl). This tool can be downloaded using instructions [here](https://bearssl.org/#download-and-installation)
-- then run 
+### Events
 
-```
-brssl ta ./assets/ca-chain.pem > ./iot/trust.h
-```
-- include this file in the arudion code
-
-
-# Air
-
-- Static IAQ:
-        The main difference between IAQ and static IAQ (sIAQ) relies in the scaling factor calculated based on the recent sensor history. The sIAQ output has been optimized for stationary applications (e.g. fixed indoor devices) whereas the IAQ output is ideal for mobile application (e.g. carry-on devices).
-- bVOCeq estimate:
-        The breath VOC equivalent output (bVOCeq) estimates the total VOC concentration [ppm] in the environment. It is calculated based on the sIAQ output and derived from lab tests.
-- CO2eq estimate:
-        Estimates a CO2-equivalent (CO2eq) concentration [ppm] in the environment. It is also calculated based on the sIAQ output and derived from VOC measurements and correlation from field studies.
-
-Since bVOCeq and CO2eq are based on the sIAQ output, they are expected to perform optimally in stationnary applications where the main source of VOCs in the environment comes from human activity (e.g. in a bedroom).
-
-# API
-
-## Events
-
-### Create event
+#### Create event
 POST /api/events
 
 ```json
@@ -128,7 +123,7 @@ POST /api/events
 curl -X POST -H "Content-Type: application/json" -d '{"startTimestamp": 1698090929, "eventType": "window:open", "locationId": "bedroom"}' http://localhost:8081/api/events
 ```
 
-### Query events
+#### Query events
 
 GET /api/events?from=1698090929&to=1698090930
 
@@ -146,7 +141,7 @@ GET /api/events?from=1698090929&to=1698090930
 }]
 ```
 
-### Add end timestamp to event
+#### Add end timestamp to event
 
 PATCH  /api/events/:eventId
 
@@ -158,9 +153,9 @@ PATCH  /api/events/:eventId
 curl -X PATCH -H "Content-Type: application/json" -d '{"endTimestamp": 1698090929}' http://localhost:8081/api/events
 ```
 
-## Measurements
+### Measurements
 
-### Query measurements
+#### Query measurements
 
 GET /api/measurements?resolution=86400&to=1702156335&from=1701810734
 
