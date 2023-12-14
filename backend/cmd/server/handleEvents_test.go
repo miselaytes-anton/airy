@@ -95,7 +95,7 @@ func Test_handleEventsList(t *testing.T) {
 			http.StatusBadRequest,
 			ResponseError{
 				Status: "Bad Request",
-				Error:  "invalid to: hello, must be a unix timestamp in ms",
+				Error:  "could not parse 'to', expected an integer, got 'hello'",
 			},
 			mocks.GetAllOkMock,
 		},
@@ -105,7 +105,7 @@ func Test_handleEventsList(t *testing.T) {
 			http.StatusBadRequest,
 			ResponseError{
 				Status: "Bad Request",
-				Error:  "invalid from: hello, must be a unix timestamp in ms",
+				Error:  "could not parse 'from', expected an integer, got 'hello'",
 			},
 			mocks.GetAllOkMock,
 		},

@@ -3,45 +3,48 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/julienschmidt/httprouter"
 	"github.com/miselaytes-anton/tatadata/backend/internal/models"
 )
 
-func makeEventsQuery(r *http.Request) (models.EventsQuery, error) {
-	q := models.EventsQuery{}
-
-	fromStr := r.URL.Query().Get("from")
-	fromEpoch, err := strconv.ParseInt(fromStr, 10, 64)
-	if err != nil {
-		return q, fmt.Errorf("invalid from: %s, must be a unix timestamp in ms", fromStr)
-	}
-
-	toStr := r.URL.Query().Get("to")
-	toEpoch, err := strconv.ParseInt(toStr, 10, 64)
-	if err != nil {
-		return q, fmt.Errorf("invalid to: %s, must be a unix timestamp in ms", toStr)
-	}
-
-	q.StartEpoch = fromEpoch
-	q.EndEpoch = toEpoch
-
-	return q, nil
-}
-
 func (s *Server) handleEventsList() http.HandlerFunc {
+	type requestQuery struct {
+		From int64 `json:"from" validate:"required,gt=0,lte=2147483647"`
+		To   int64 `json:"to" validate:"required,gtfield=From,lte=2147483647"`
+	}
+
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		q, err := makeEventsQuery(r)
+		from, err := s.readInt64FromQuery(r.URL.Query(), "from", nil)
 		if err != nil {
 			s.jsonError(w, err, http.StatusBadRequest)
 			return
 		}
+		to, err := s.readInt64FromQuery(r.URL.Query(), "to", nil)
+		if err != nil {
+			s.jsonError(w, err, http.StatusBadRequest)
+			return
+		}
+		q := requestQuery{
+			From: from,
+			To:   to,
+		}
 
-		events, err := s.Events.GetAll(q)
+		err = validate.Struct(q)
+
+		if err != nil {
+			s.jsonValidationError(w, err)
+			return
+		}
+
+		events, err := s.Events.GetAll(models.EventsQuery{
+			StartEpoch: q.From,
+			EndEpoch:   q.To,
+		})
 		if err != nil {
 			s.jsonError(w, err, http.StatusInternalServerError)
 			return
