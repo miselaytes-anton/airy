@@ -1,12 +1,13 @@
 version: "3.8"
 services:
   server:
+    image: airy-backend:latest
+    build: .
     container_name: airy-server
     restart: always
     ports:
     - target: 8081
       published: 8081
-    image: airy-backend:latest
     networks:
       - airy-net
     depends_on:
@@ -16,9 +17,10 @@ services:
       - POSTGRES_ADDRESS=${POSTGRES_ADDRESS}
     command: ["/server"]
   processor:
+    image: airy-backend:latest
+    build: .
     container_name: airy-processor
     restart: always
-    image: airy-backend:latest
     networks:
       - airy-net
     depends_on:
