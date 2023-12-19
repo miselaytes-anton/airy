@@ -32,7 +32,7 @@ make server
 
 ### Firewall
 
-Applications running in docker can be accessed from exteranl host as well.
+Applications running in docker can be accessed from external host as well.
 This is because `sudo ufw status` gives us:
 
 ```
