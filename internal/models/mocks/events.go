@@ -3,7 +3,7 @@ package mocks
 import (
 	"errors"
 
-	"github.com/miselaytes-anton/tatadata/internal/models"
+	"github.com/oddnoddles/airy-backend/internal/models"
 )
 
 type InsertEventMock = func(models.Event, *[]models.Event) (models.Event, error)

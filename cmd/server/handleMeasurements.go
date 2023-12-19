@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/miselaytes-anton/tatadata/internal/models"
+	"github.com/oddnoddles/airy-backend/internal/models"
 )
 
 func makeMeasurementsQuery(r *http.Request) (models.MeasurementsQuery, error) {

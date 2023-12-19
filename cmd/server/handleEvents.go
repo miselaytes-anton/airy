@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/julienschmidt/httprouter"
-	"github.com/miselaytes-anton/tatadata/internal/models"
-	"github.com/miselaytes-anton/tatadata/internal/urlquery"
+	"github.com/oddnoddles/airy-backend/internal/models"
+	"github.com/oddnoddles/airy-backend/internal/urlquery"
 )
 
 type eventsListQuery struct {

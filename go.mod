@@ -1,4 +1,4 @@
-module github.com/miselaytes-anton/tatadata
+module github.com/oddnoddles/airy-backend
 
 go 1.21.0
 

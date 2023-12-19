@@ -2,9 +2,9 @@ version: "3.8"
 services:
   postgres:
     image: postgres
-    container_name: tatadata-postgres
+    container_name: airy-postgres
     networks:
-      - tatadata-net
+      - airy-net
     restart: always
     environment:
       POSTGRES_PASSWORD: tatadata
@@ -18,11 +18,11 @@ services:
         source: ./__binds/postgresql/docker-entrypoint-initdb.d
         target: /docker-entrypoint-initdb.d
   mosquitto:
-    container_name: tatadata-mosquitto
+    container_name: airy-mosquitto
     restart: always
     image: eclipse-mosquitto
     networks:
-      - tatadata-net
+      - airy-net
     ports:
       - target: 1883
         published: 1883
@@ -40,5 +40,5 @@ services:
         source: ./__binds/mosquitto/log
         target: /mosquitto/log
 networks:
-  tatadata-net:
+  airy-net:
     external: false

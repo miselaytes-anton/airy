@@ -1,13 +1,13 @@
-# Airtata backend
+# Airy backend
 
-This repository contains backend code for airtata project. Project consists of:
-- [Arduino IoT with environmental sensors](https://github.com/airtata/airtata-iot). It collects air quality, temperature, humidity and other enviromental data and sends it to an MQTT broker. 
-- [Mobile app](https://github.com/airtata/airtata-app). It allows to manage air events and view graphs for measurements.
+This repository contains backend code for airy project. Project consists of:
+- [Arduino IoT with environmental sensors](https://github.com/oddnoodles/airy-iot). It collects air quality, temperature, humidity and other enviromental data and sends it to an MQTT broker. 
+- [Mobile app](https://github.com/oddnoodles/airy-app). It allows to manage air events and view graphs for measurements.
 - Backend (this repository) consists of 2 applications:
   - `api` for a mobile client, which provides possibility to manage air events and query enviromental measurements
   - `processor` which connects to MQTT broker, subscribes to measurements sent by IoT and persists those to postgres database.
 
-  Backend also renders graphs which can be viewed in the browser at https://tatadata.amiselaytes.com/api/graphs
+  Backend also renders graphs which can be viewed in the browser at https://airy.amiselaytes.com/api/graphs
 
   ![graph](./assets/airquality-graph.png "Airquality graph")
 
@@ -63,7 +63,7 @@ Where 2375/tcp and 2376/tcp rules are giving docker permission to route requests
 Certificates are configured using certbot:
 
 ```
-sudo certbot --nginx -d amiselaytes.com -d tatadata.amiselaytes.com
+sudo certbot --nginx -d amiselaytes.com -d airy.amiselaytes.com
 ```
 This command generates autrenewabale certificates stored in `/etc/letsencrypt/live/amiselaytes.com` folder.
 
@@ -133,9 +133,9 @@ GET /api/events?from=1698090929&to=1698090930
 
 ```json
 [{
- "id": "uuid",
- "startTimestamp": 1698090929,
- "endTimestamp": 1698090929,
+  "id": "uuid",
+  "startTimestamp": 1698090929,
+  "endTimestamp": 1698090929,
   "eventType": "window:open",
   "locationId": "bedroom"
 }]

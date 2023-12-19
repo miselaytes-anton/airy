@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   server:
-    container_name: tatadata-server
+    container_name: airy-server
     restart: always
     ports:
     - target: 8081
@@ -9,19 +9,19 @@ services:
     build: 
       dockerfile: server.dockerfile
     networks:
-      - tatadata-net
+      - airy-net
     depends_on:
       - postgres
     environment:
       - BROKER_ADDRESS=${BROKER_ADDRESS}
       - POSTGRES_ADDRESS=${POSTGRES_ADDRESS}
   processor:
-    container_name: tatadata-processor
+    container_name: airy-processor
     restart: always
     build: 
       dockerfile: processor.dockerfile
     networks:
-      - tatadata-net
+      - airy-net
     depends_on:
       - mosquitto
       - postgres
