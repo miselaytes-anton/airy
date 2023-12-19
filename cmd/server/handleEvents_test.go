@@ -26,8 +26,8 @@ func Test_handleEventsList(t *testing.T) {
 
 	eventsMock := mocks.EventModelMock{
 		Events:          events,
-		GetMock:         mocks.GetOkMock,
-		GetAllMock:      mocks.GetAllOkMock,
+		GetMock:         mocks.GetEventOkMock,
+		GetAllMock:      mocks.GetAllEventsOkMock,
 		InsertEventMock: mocks.InsertEventOkMock,
 	}
 
@@ -97,7 +97,7 @@ func Test_handleEventsList(t *testing.T) {
 				Status: "Bad Request",
 				Error:  "could not parse 'to', expected an integer, got 'hello'",
 			},
-			mocks.GetAllOkMock,
+			mocks.GetAllEventsOkMock,
 		},
 		{
 			"invalid from",
@@ -107,7 +107,7 @@ func Test_handleEventsList(t *testing.T) {
 				Status: "Bad Request",
 				Error:  "could not parse 'from', expected an integer, got 'hello'",
 			},
-			mocks.GetAllOkMock,
+			mocks.GetAllEventsOkMock,
 		},
 		{
 			"database error",
@@ -117,7 +117,7 @@ func Test_handleEventsList(t *testing.T) {
 				Status: "Internal Server Error",
 				Error:  "internal server error occured",
 			},
-			mocks.GetAllErrorMock,
+			mocks.GetAllEventsErrorMock,
 		},
 	}
 
@@ -172,7 +172,7 @@ func Test_handleEventsCreate(t *testing.T) {
 
 	eventsMock := mocks.EventModelMock{
 		Events:          make([]models.Event, 0),
-		GetAllMock:      mocks.GetAllOkMock,
+		GetAllMock:      mocks.GetAllEventsOkMock,
 		InsertEventMock: mocks.InsertEventOkMock,
 	}
 
@@ -312,7 +312,7 @@ func Test_handleEventsUpdate(t *testing.T) {
 
 	eventsMock := mocks.EventModelMock{
 		Events:          make([]models.Event, 0),
-		GetMock:         mocks.GetOkMock,
+		GetMock:         mocks.GetEventOkMock,
 		UpdateEventMock: mocks.UpdateEventOkMock,
 	}
 

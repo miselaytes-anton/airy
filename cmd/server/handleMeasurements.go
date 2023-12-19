@@ -33,7 +33,7 @@ func makeMeasurementsQuery(r *http.Request) (models.MeasurementsQuery, error) {
 	q.StartEpoch = fromEpoch
 	q.EndEpoch = toEpoch
 	q.Resolution = int(resolution)
-	q.SensorIDs = sensorIDs
+	q.SensorIDs = SENSOR_IDS
 
 	return q, nil
 }

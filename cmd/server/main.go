@@ -18,6 +18,8 @@ import (
 	"github.com/miselaytes-anton/tatadata/internal/models"
 )
 
+var SENSOR_IDS = []string{"livingroom", "bedroom"}
+
 func main() {
 	db, err := sql.Open("postgres", config.GetPostgresAddress())
 	if err != nil {

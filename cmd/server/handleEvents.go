@@ -8,30 +8,38 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/julienschmidt/httprouter"
 	"github.com/miselaytes-anton/tatadata/internal/models"
+	"github.com/miselaytes-anton/tatadata/internal/urlquery"
 )
 
-func (s *Server) handleEventsList() http.HandlerFunc {
-	type requestQuery struct {
-		From int64 `json:"from" validate:"required,gt=0,lte=2147483647"`
-		To   int64 `json:"to" validate:"required,gtfield=From,lte=2147483647"`
-	}
+type eventsListQuery struct {
+	From *int64 `validate:"required,gt=0,lte=2147483647"`
+	To   *int64 `validate:"required,gtfield=From,lte=2147483647"`
+}
 
+func parsEventsListQuery(r *http.Request) (*eventsListQuery, error) {
+	values := r.URL.Query()
+	from, err := urlquery.ReadInt64FromQuery(values, "from")
+	if err != nil {
+		return nil, err
+	}
+	to, err := urlquery.ReadInt64FromQuery(values, "to")
+	if err != nil {
+		return nil, err
+	}
+	return &eventsListQuery{
+		From: from,
+		To:   to,
+	}, nil
+}
+
+func (s *Server) handleEventsList() http.HandlerFunc {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		from, err := s.readInt64FromQuery(r.URL.Query(), "from", nil)
+		q, err := parsEventsListQuery(r)
 		if err != nil {
 			s.jsonError(w, err, http.StatusBadRequest)
 			return
-		}
-		to, err := s.readInt64FromQuery(r.URL.Query(), "to", nil)
-		if err != nil {
-			s.jsonError(w, err, http.StatusBadRequest)
-			return
-		}
-		q := requestQuery{
-			From: from,
-			To:   to,
 		}
 
 		err = validate.Struct(q)
@@ -42,8 +50,8 @@ func (s *Server) handleEventsList() http.HandlerFunc {
 		}
 
 		events, err := s.Events.GetAll(models.EventsQuery{
-			StartEpoch: q.From,
-			EndEpoch:   q.To,
+			StartEpoch: *q.From,
+			EndEpoch:   *q.To,
 		})
 		if err != nil {
 			s.jsonError(w, err, http.StatusInternalServerError)

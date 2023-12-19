@@ -35,7 +35,7 @@ func (m *EventModelMock) GetAll(mq models.EventsQuery) ([]models.Event, error) {
 	return m.GetAllMock(mq, &m.Events)
 }
 
-func GetOkMock(id string, events *[]models.Event) (models.Event, error) {
+func GetEventOkMock(id string, events *[]models.Event) (models.Event, error) {
 	for _, event := range *events {
 		if event.ID == id {
 			return event, nil
@@ -44,11 +44,11 @@ func GetOkMock(id string, events *[]models.Event) (models.Event, error) {
 	return models.Event{}, nil
 }
 
-func GetAllOkMock(mq models.EventsQuery, events *[]models.Event) ([]models.Event, error) {
+func GetAllEventsOkMock(mq models.EventsQuery, events *[]models.Event) ([]models.Event, error) {
 	return *events, nil
 }
 
-func GetAllErrorMock(mq models.EventsQuery, events *[]models.Event) ([]models.Event, error) {
+func GetAllEventsErrorMock(mq models.EventsQuery, events *[]models.Event) ([]models.Event, error) {
 	return nil, errors.New("database error")
 }
 

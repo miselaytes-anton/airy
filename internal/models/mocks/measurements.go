@@ -19,3 +19,7 @@ func (m *MeasurementModelMock) InsertMeasurement(measurement models.Measurement)
 func (m *MeasurementModelMock) GetMeasurements(mq models.MeasurementsQuery) ([]models.Measurement, error) {
 	return m.GetMeasurementsMock(mq, &m.Measurements)
 }
+
+func GetMeasurementsOkMock(mq models.MeasurementsQuery, measurements *[]models.Measurement) ([]models.Measurement, error) {
+	return *measurements, nil
+}

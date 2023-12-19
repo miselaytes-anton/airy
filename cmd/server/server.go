@@ -7,9 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"runtime/debug"
-	"strconv"
 	"strings"
 	"unicode"
 
@@ -140,18 +138,4 @@ func (s Server) jsonValidationError(w http.ResponseWriter, err error) {
 	err = errors.New(strings.Join(formattedErrors, ", "))
 
 	s.jsonError(w, err, http.StatusBadRequest)
-}
-
-func (s Server) readInt64FromQuery(qs url.Values, key string, defaultValue *int64) (int64, error) {
-	str := qs.Get(key)
-	if str == "" && defaultValue != nil {
-		return *defaultValue, nil
-	}
-
-	integer, err := strconv.ParseInt(str, 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("could not parse '%s', expected an integer, got '%s'", key, str)
-	}
-
-	return integer, nil
 }
