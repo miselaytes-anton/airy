@@ -1,7 +1,5 @@
 .DEFAULT_GOAL := build
 
-include .env
-
 ###############
 # Build
 ###############
