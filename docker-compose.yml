@@ -33,12 +33,6 @@ services:
         source: ./__binds/mosquitto/config
         target: /mosquitto/config
         read_only: true
-      - type: bind
-        source: ./__binds/mosquitto/data
-        target: /mosquitto/data
-      - type: bind
-        source: ./__binds/mosquitto/log
-        target: /mosquitto/log
 networks:
   airy-net:
     external: false
