@@ -16,17 +16,41 @@ This repository contains backend code for airy project. Project consists of:
 
 ### Setup .env file
 
+Copy sample env file and provide correct values.
 ```
 cp .env.sample .env 
 ```
-Now modify env to provide correct values.
 
-### Start docker with services and the server
+### Setup mosquitto password file
 
+To use default credentials do:
+```bash
+cp __binds/mosquitto/config/password_file.sample __binds/mosquitto/config/password_file
 ```
+That would allow connecting using default credentials, which can be found in `.env.sample` file.
+
+See [mosquitto_passwd docs](https://www.mankier.com/1/mosquitto_passwd) for more information.
+
+### Run dependencies in Docker and apps on the host
+
+```bash
 make docker-dev
 make server
+make processor
 ```
+
+### Run everything in Docker
+
+```bash
+make docker-prod
+```
+
+### Publish a test measurement
+```bash
+make test-publisher
+```
+
+Ensure correct `BROKER_ADDRESS` in .env file for command to work.
 
 ## VM setup
 
@@ -73,7 +97,9 @@ SSL connection is terminated in NGINX, then traffic from NGINX to MQTT in docker
 
 <details>
 <summary>Diagram</summary>
+
 ![nginx ssl](./assets/nginx-mqtt-ssl.png "Nginx SSL")
+
 </details>
 
 The following nginx config is used:
@@ -92,13 +118,6 @@ stream {
   }
 }
 ```
-
-Command for testing SSL connection:
-```
-make test-publisher
-```
-
-Ensure correct `BROKER_ADDRESS` in .env file for command to work.
 
 ## API specification
 

@@ -1,5 +1,7 @@
 .DEFAULT_GOAL := build
 
+-include .env
+
 ###############
 # Build
 ###############
@@ -58,7 +60,7 @@ processor:
 
 MESSAGE = bedroom 51.86 607.44 0.52 100853 27.25 60.22
 test-publisher:
-	docker run eclipse-mosquitto -- mosquitto_pub -d -L ${BROKER_ADDRESS}/measurement -m "${MESSAGE}" -i "test-publisher"
+	docker run --env-file=.env --network=host eclipse-mosquitto -- mosquitto_pub -d -L "${BROKER_ADDRESS}/measurement" -m "${MESSAGE}" -i "test-publisher"
 .PHONY:test-publisher
 
 #######
