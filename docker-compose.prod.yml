@@ -6,7 +6,7 @@ services:
     ports:
     - target: 8081
       published: 8081
-    image: airy-backend-server:latest
+    image: airy-backend:latest
     networks:
       - airy-net
     depends_on:
@@ -18,7 +18,7 @@ services:
   processor:
     container_name: airy-processor
     restart: always
-    image: airy-backend-processor:latest
+    image: airy-backend:latest
     networks:
       - airy-net
     depends_on:
