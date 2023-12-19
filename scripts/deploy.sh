@@ -1,9 +1,5 @@
 set -e
 
-SSH_USER=airy
-SSH_HOST=amiselaytes.com
-DEPLOY_PATH=/var/www/airy
-
 IMAGE_FILE=airy-backend.tar.gz
 IMAGE_TAG=airy-backend:latest
 

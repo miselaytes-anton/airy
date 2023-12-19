@@ -1,0 +1,26 @@
+name: Continuous Delivery
+
+on: workflow_dispatch
+
+env:
+  SSH_USER: "${{ vars.SSH_USER }}"
+  SSH_HOST: "${{ vars.SSH_HOST }}"
+  SSH_HOST_KEY: "${{ vars.SSH_HOST_KEY }}"
+  DEPLOY_PATH: "${{ vars.DEPLOY_PATH }}"
+  DOCKER_BUILDKIT: 1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Add private key 
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+            ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Add host key
+        run: |
+          echo "$SSH_HOST $SSH_HOST_KEY">> ~/.ssh/known_hosts
+      - name: Execute remote commands
+        run: |
+          ./scripts/deploy.sh
