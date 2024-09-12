@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/oddnoddles/airy-backend/internal/models"
+	"github.com/miselaytes-anton/airy/internal/models"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )

@@ -1,16 +1,21 @@
-# Airy backend
+# Airy
 
-This repository contains backend code for airy project. Project consists of:
-- [Arduino IoT with environmental sensors](https://github.com/oddnoodles/airy-iot). It collects air quality, temperature, humidity and other enviromental data and sends it to an MQTT broker. 
-- [Mobile app](https://github.com/oddnoodles/airy-app). It allows to manage air events and view graphs for measurements.
-- Backend (this repository) consists of 2 applications:
-  - `api` for a mobile client, which provides possibility to manage air events and query enviromental measurements
-  - `processor` which connects to MQTT broker, subscribes to measurements sent by IoT and persists those to postgres database.
+This repository contains code for Airy hobby project. The goal of the project is to collect air quality measurements in the appartment and display those on a dashboard in a web app.
 
-  Backend also renders graphs which can be viewed in the browser at https://airy.amiselaytes.com/api/graphs
+For simplicity the code is written only to meet the specific requirements of this project. However with minimal changes it should be possible to extend the data model and API to store and display other kinds of measurements. 
+
+![architecture](./assets/airy.png "Airy architecture")
+
+## Backend
+
+Backend is written in Golang and consists of 2 applications:
+  - `server` provides an HTTP API to query measurements, also renders graphs to view in the browser
+  - `processor` connects to MQTT broker, subscribes to measurements sent by IoT and persists those to a postgres database.
 
   ![graph](./assets/airquality-graph.png "Airquality graph")
 
+## IoT
+- [Arduino Nano 33 IoT with BME680 air sensor](./iot/). It collects air quality, temperature, humidity and other enviromental data and sends it to an MQTT broker.
 
 ## Local development
 
@@ -31,7 +36,9 @@ That would allow connecting using default credentials, which can be found in `.e
 
 See [mosquitto_passwd docs](https://www.mankier.com/1/mosquitto_passwd) for more information.
 
-### Run dependencies in Docker and apps on the host
+### Start the app and dependencies
+
+Run dependencies in Docker and apps on the host:
 
 ```bash
 make docker-dev
@@ -39,51 +46,22 @@ make server
 make processor
 ```
 
-### Run everything in Docker
+Or run everything in Docker
 
 ```bash
 make docker-prod
 ```
 
-### Publish a test measurement
-```bash
-make test-publisher
-```
+At this point we should be able to see an empty graph at http://localhost:8081/api/graphs?resolution=60
 
-Ensure correct `BROKER_ADDRESS` in .env file for command to work.
+### Adding measurements
+We can publush a test measurement with `make test-publisher`. Wait a minute and publush another measurement.  If all worked well we should be able to see the measurement on the graph with a minute resolution. Ensure correct `BROKER_ADDRESS` in .env file for command to work.
 
 ## VM setup
 
-### Firewall
-
-Applications running in docker can be accessed from external host as well.
-This is because `sudo ufw status` gives us:
-
-```
-To                         Action      From
---                         ------      ----
-22/tcp                     LIMIT       Anywhere
-2375/tcp                   ALLOW       Anywhere
-2376/tcp                   ALLOW       Anywhere
-22/tcp (v6)                LIMIT       Anywhere (v6)
-2375/tcp (v6)              ALLOW       Anywhere (v6)
-2376/tcp (v6)              ALLOW       Anywhere (v6)
-```
-
-Where 2375/tcp and 2376/tcp rules are giving docker permission to route requests to any open port on the host machine. Docker usese it to expose container ports. See also [uwf](https://wiki.ubuntu.com/UncomplicatedFirewall) docs.
+The app was designed to be deployed on a Digital Ocean VM which has Docker, Certbot and Nginx installed. The instructions below provide the steps I used in my case, but there are probably different ways to do it. 
 
 ### SSL
-
-<details>
-<summary>Reminder of how SSL works</summary>
-
-- Browser connects to a web server (website) secured with SSL (https). Browser requests that the server identify itself.
-- Server sends a copy of its SSL Certificate, including the server’s public key.
-- Browser checks the certificate root against a list of trusted CAs and that the certificate is unexpired, unrevoked, and that its common name is valid for the website that it is connecting to. If the browser trusts the certificate, it creates, encrypts, and sends back a symmetric session key using the server’s public key.
-- Server decrypts the symmetric session key using its private key and sends back an acknowledgement encrypted with the session key to start the encrypted session.
-- Server and Browser now encrypt all transmitted data with the session key.
-</details>
-
 Certificates are configured using certbot:
 
 ```
@@ -93,14 +71,9 @@ This command generates autrenewabale certificates stored in `/etc/letsencrypt/li
 
 See also [those docs](https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-20-04)
 
+### Nginx
+
 SSL connection is terminated in NGINX, then traffic from NGINX to MQTT in docker container is not encrypted.
-
-<details>
-<summary>Diagram</summary>
-
-![nginx ssl](./assets/nginx-mqtt-ssl.png "Nginx SSL")
-
-</details>
 
 The following nginx config is used:
 
@@ -120,6 +93,60 @@ stream {
 ```
 
 ## API specification
+
+### Create a measurement
+
+Message format for the measurements is white space separate string in the following order
+`SensorID IAQ CO2 VOC Pressure Temperature Humidity`. 
+
+For example `bedroom 51.86 607.44 0.52 100853 27.25 60.22` would create a measurement for 
+sensorId=bedroom, IAQ=51.86, CO2=607.44, VOC=0.52, Pressure=100853, Temperature=27.25, and Humidity=60.22.
+
+Messages should be sent to the broker address and `/measurement` route.
+
+### Graphs
+
+GET /api/graphs
+
+Query parameters
+- `view` optional, default to `day`, can be one of `day`, `week`
+- `date` optional, default to today, in the yyyy-mm-dd format, such as 2024-01-01
+- `resolution` must be in ms, for example 86400 for a day, 3600 for an hour
+
+### Measurements
+
+#### Query measurements
+
+GET /api/measurements?resolution=86400&to=1702156335&from=1701810734
+
+- `from` must be a unix timestamp in ms
+- `to` must be a unix timestamp in ms
+- `resolution` must be in ms, for example 86400 for a day, 3600 for an hour
+
+```json
+[
+  {
+    "timestamp": 1701734400,
+    "sensorId": "bedroom",
+    "iaq": 108.49368098159503,
+    "co2": 949.001042944785,
+    "voc": 1.4850920245398769,
+    "pressure": 101128.12865030681,
+    "temperature": 18.051226993865033,
+    "humidity": 44.831656441717776
+  },
+  {
+    "timestamp": 1701734400,
+    "sensorId": "livingroom",
+    "iaq": 98.50804878048783,
+    "co2": 940.1318902439023,
+    "voc": 1.377317073170732,
+    "pressure": 101159.84170731703,
+    "temperature": 20.659268292682928,
+    "humidity": 42.94823170731707
+  }
+]
+```
 
 ### Events
 
@@ -170,40 +197,4 @@ PATCH  /api/events/:eventId
 
 ```bash
 curl -X PATCH -H "Content-Type: application/json" -d '{"endTimestamp": 1698090929}' http://localhost:8081/api/events
-```
-
-### Measurements
-
-#### Query measurements
-
-GET /api/measurements?resolution=86400&to=1702156335&from=1701810734
-
-- `from` must be a unix timestamp in ms
-- `to` must be a unix timestamp in ms
-- `resolution` must be in ms, for example 86400 for a day, 3600 for an hour
-
-```json
-[
-  {
-    "timestamp": 1701734400,
-    "sensorId": "bedroom",
-    "iaq": 108.49368098159503,
-    "co2": 949.001042944785,
-    "voc": 1.4850920245398769,
-    "pressure": 101128.12865030681,
-    "temperature": 18.051226993865033,
-    "humidity": 44.831656441717776
-  },
-  {
-    "timestamp": 1701734400,
-    "sensorId": "livingroom",
-    "iaq": 98.50804878048783,
-    "co2": 940.1318902439023,
-    "voc": 1.377317073170732,
-    "pressure": 101159.84170731703,
-    "temperature": 20.659268292682928,
-    "humidity": 42.94823170731707
-  }
-]
-
 ```

@@ -1,4 +1,4 @@
-module github.com/oddnoddles/airy-backend
+module github.com/miselaytes-anton/airy
 
 go 1.21.0
 

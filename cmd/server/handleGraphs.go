@@ -9,9 +9,9 @@ import (
 	"github.com/go-echarts/go-echarts/v2/types"
 	"github.com/go-playground/validator/v10"
 
-	"github.com/oddnoddles/airy-backend/internal/dateutil"
-	"github.com/oddnoddles/airy-backend/internal/models"
-	"github.com/oddnoddles/airy-backend/internal/urlquery"
+	"github.com/miselaytes-anton/airy/internal/dateutil"
+	"github.com/miselaytes-anton/airy/internal/models"
+	"github.com/miselaytes-anton/airy/internal/urlquery"
 )
 
 type valueGetter func(measurement models.Measurement) float64

@@ -10,8 +10,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
-	"github.com/oddnoddles/airy-backend/internal/models"
-	"github.com/oddnoddles/airy-backend/internal/models/mocks"
+	"github.com/miselaytes-anton/airy/internal/models"
+	"github.com/miselaytes-anton/airy/internal/models/mocks"
 )
 
 func getMeasurementsOkMock(mq models.MeasurementsQuery, measurements *[]models.Measurement) ([]models.Measurement, error) {

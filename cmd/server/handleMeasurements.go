@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/oddnoddles/airy-backend/internal/models"
+	"github.com/miselaytes-anton/airy/internal/models"
 )
 
 func makeMeasurementsQuery(r *http.Request) (models.MeasurementsQuery, error) {

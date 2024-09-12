@@ -10,9 +10,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/oddnoddles/airy-backend/internal/models"
-	"github.com/oddnoddles/airy-backend/internal/models/mocks"
-	"github.com/oddnoddles/airy-backend/internal/testserver"
+	"github.com/miselaytes-anton/airy/internal/models"
+	"github.com/miselaytes-anton/airy/internal/models/mocks"
+	"github.com/miselaytes-anton/airy/internal/testserver"
 )
 
 func Test_handleGraphs(t *testing.T) {

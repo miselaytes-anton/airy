@@ -6,7 +6,7 @@
 __binds/postgresql/data/*
 __binds/mosquitto/config/password_file
 
-iot/arduino_secrets.h
+iot/src/arduino_secrets.h
 
 .env
 

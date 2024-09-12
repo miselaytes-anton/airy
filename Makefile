@@ -58,6 +58,7 @@ processor:
 	set -a && source .env && set +a && go run ./cmd/processor
 .PHONY:processor
 
+# SensorID IAQ CO2 VOC Pressure Temperature Humidity
 MESSAGE = bedroom 51.86 607.44 0.52 100853 27.25 60.22
 test-publisher:
 	docker run --env-file=.env --network=host eclipse-mosquitto -- mosquitto_pub -d -L "${BROKER_ADDRESS}/measurement" -m "${MESSAGE}" -i "test-publisher"

@@ -13,9 +13,9 @@ import (
 	"github.com/julienschmidt/httprouter"
 	_ "github.com/lib/pq"
 
-	"github.com/oddnoddles/airy-backend/internal/config"
-	"github.com/oddnoddles/airy-backend/internal/log"
-	"github.com/oddnoddles/airy-backend/internal/models"
+	"github.com/miselaytes-anton/airy/internal/config"
+	"github.com/miselaytes-anton/airy/internal/log"
+	"github.com/miselaytes-anton/airy/internal/models"
 )
 
 var SENSOR_IDS = []string{"livingroom", "bedroom"}

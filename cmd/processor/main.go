@@ -12,9 +12,9 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	_ "github.com/lib/pq"
 
-	"github.com/oddnoddles/airy-backend/internal/config"
-	"github.com/oddnoddles/airy-backend/internal/log"
-	"github.com/oddnoddles/airy-backend/internal/models"
+	"github.com/miselaytes-anton/airy/internal/config"
+	"github.com/miselaytes-anton/airy/internal/log"
+	"github.com/miselaytes-anton/airy/internal/models"
 )
 
 func enableMqttLogging() {
